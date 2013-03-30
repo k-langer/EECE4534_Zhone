@@ -27,7 +27,7 @@ typedef struct {
 
         returns PASS on success or FAIL on failure
 ***/
-return_value_t receive_path_init( receive_path_t* pThis );
+zhone_return_value_t receive_path_init( receive_path_t* pThis );
 
 /***
     run
@@ -39,7 +39,7 @@ return_value_t receive_path_init( receive_path_t* pThis );
 
         returns PASS if chunk was processed, NO_DATA_AVAILABLE if no data was available, or FAIL on failure
 ***/
-return_value_t receive_path_run( receive_path_t* pThis );
+zhone_return_value_t receive_path_run( receive_path_t* pThis );
 
 /***
     stop
@@ -49,6 +49,6 @@ return_value_t receive_path_run( receive_path_t* pThis );
 
         returns PASS on success or FAIL on failure
 ***/
-return_value_t receive_path_stop( receive_path_t* pThis ); 
+zhone_return_value_t receive_path_stop( receive_path_t* pThis ); 
 
 #endif

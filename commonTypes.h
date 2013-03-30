@@ -7,7 +7,7 @@
 ***/
 
 /***
-    return_value_t
+    zhone_return_value_t
         -enum for return values of functions
         -add new return values here if necessary!
 ***/
@@ -16,14 +16,14 @@ typedef enum {
     PASS,
     FAIL,
     NO_DATA_AVAILABLE
-} return_value_t;
+} zhone_return_value_t;
 
 
 /***
-    address_t
+    zhone_address_t
         -integer value of a zhone address
 ***/
-typedef unsigned short address_t;
+typedef unsigned short zhone_address_t;
 
 /***
 	a generic status enum that contains all of the possible statuses for both the UI
@@ -42,6 +42,6 @@ typedef enum {
     END_CALL,
     ACCEPT_CALL,
     REJECT_CALL
-} status_t;
+} zhone_status_t;
 
 #endif
