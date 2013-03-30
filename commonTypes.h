@@ -10,7 +10,7 @@
     address_t
         -integer value of a zhone address
 ***/
-typedef unsigned int address_t;
+typedef unsigned short address_t;
 
 /***
 	a generic status enum that contains all of the possible statuses for both the UI
