@@ -1,6 +1,8 @@
 #ifndef PHONEBOOK_H
 #define PHONEBOOK_H
 
+#include "commonTypes.h"
+
 /***
     Phonebook
         -keeps track of two remote Zhones' addresses
@@ -20,9 +22,9 @@ typedef struct {
     address1 - address to set as pThis's first entry
     address2 - address to set as pThis's second entry
 
-    returns 0 on success or -1 on failure
+    returns PASS on success or FAIL on failure
 ***/
-int phonebook_init(phonebook_t* pThis, address_t address1, address_t address2);
+return_value_t phonebook_init(phonebook_t* pThis, address_t address1, address_t address2);
 
 /***
     getAddress1/getAddress2

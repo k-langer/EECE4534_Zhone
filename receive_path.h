@@ -1,6 +1,8 @@
 #ifndef RECEIVE_PATH_H
 #define RECEIVE_PATH_H
 
+#include "commonTypes.h"
+
 /***
     Receive Path
         -contains xbee_rx, decoder, and audio_output modules
@@ -23,21 +25,21 @@ typedef struct {
 
         pThis - pointer to receive path object to initialize        
 
-        returns 0 on success or -1 on failure
+        returns PASS on success or FAIL on failure
 ***/
-int receive_path_init( receive_path_t* pThis );
+return_value_t receive_path_init( receive_path_t* pThis );
 
 /***
     run
-        -if a chunk is available on encoder_input_queue, 
-            encodes the chunk and passes it to xbee_tx_input_queue
+        -if a chunk is available on decoder_input_queue, 
+            decodes the chunk and passes it to audio_output_queue
         -if no chunk is availabe, exits
 
         pThis - pointer to receive path object to run
 
-        returns 0 if chunk was processed, 1 if no data was available, or -1 on failure
+        returns PASS if chunk was processed, NO_DATA_AVAILABLE if no data was available, or FAIL on failure
 ***/
-int receive_path_run( receive_path_t* pThis );
+return_value_t receive_path_run( receive_path_t* pThis );
 
 /***
     stop
@@ -45,8 +47,8 @@ int receive_path_run( receive_path_t* pThis );
 
         pThis - pointer to receive path to stop
 
-        returns 0 on success or -1 on failure
+        returns PASS on success or FAIL on failure
 ***/
-int receive_path_stop( receive_path_t* pThis ); 
+return_value_t receive_path_stop( receive_path_t* pThis ); 
 
 #endif

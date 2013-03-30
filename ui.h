@@ -21,9 +21,9 @@ typedef struct {
         
         *pThis - pointer to ui object to initialize
         
-        return 0 for success or -1 for failure
+        return PASS for success or FAIL for failure
 ***/
-int ui_init(ui_t* pThis);
+return_value_t ui_init(ui_t* pThis);
 
 /***
     get_status
@@ -40,9 +40,9 @@ status_t ui_get_status(ui_t* pThis);
         pThis - pointer to ui object whose status will be set 
         newStatus - status that will be set on *pThis
 
-        returns 0 for success or -1 for failure
+        returns PASS for success or FAIL for failure
 ***/
-int ui_set_status(ui_t* pThis, status_t newStatus);
+return_value_t ui_set_status(ui_t* pThis, status_t newStatus);
 
 /***
     button1_ISR & button2_ISR

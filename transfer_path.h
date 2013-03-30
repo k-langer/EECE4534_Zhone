@@ -1,6 +1,8 @@
 #ifndef TRANSFER_PATH_H
 #define TRANSFER_PATH_H
 
+#include "commonTypes.h"
+
 /***
     Transfer Path
         -contains audio_input, encoder, and xbee_tx
@@ -23,9 +25,9 @@ typedef struct {
 
         pThis - pointer to transfer path object to initialize        
 
-        returns 0 on success or -1 on failure
+        returns PASS on success or FAIL on failure
 ***/
-int transfer_path_init( transfer_path_t* pThis );
+return_value_t transfer_path_init( transfer_path_t* pThis );
 
 /***
     run
@@ -35,9 +37,9 @@ int transfer_path_init( transfer_path_t* pThis );
 
         pThis - pointer to transfer path object to run
 
-        returns 0 if chunk was processed, 1 if no data was available, or -1 on failure
+        returns PASS if chunk was processed, NO_DATA_AVAILABLE if no data was available, or FAIL on failure
 ***/
-int transfer_path_run( transfer_path_t* pThis );
+return_value_t transfer_path_run( transfer_path_t* pThis );
 
 /***
     stop
@@ -45,8 +47,8 @@ int transfer_path_run( transfer_path_t* pThis );
 
         pThis - pointer to transfer path to stop
 
-        returns 0 on success or -1 on failure
+        returns PASS on success or FAIL on failure
 ***/
-int transfer_path_stop( transfer_path_t* pThis );
+return_value_t transfer_path_stop( transfer_path_t* pThis );
 
 #endif
