@@ -9,7 +9,7 @@
 ***/
 
 typedef struct {
-    xbee_rx_t xbee_rx;
+    xbee_rx_t* xbee_rx;
     decoder_t decoder;
     audio_output_t audio_output;
 
