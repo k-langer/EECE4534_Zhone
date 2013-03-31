@@ -11,7 +11,7 @@
 ***/
 
 typedef struct {
-    zhone_status_t status;
+    phone_status_t status;
 } ui_t;
 
 /***
@@ -23,7 +23,7 @@ typedef struct {
         
         return PASS for success or FAIL for failure
 ***/
-zhone_return_value_t ui_init(ui_t* pThis);
+return_value_t ui_init(ui_t* pThis);
 
 /***
     get_status
@@ -32,7 +32,7 @@ zhone_return_value_t ui_init(ui_t* pThis);
     
         returns status of *pThis
 ***/
-zhone_status_t ui_get_status(ui_t* pThis);
+phone_status_t ui_get_status(ui_t* pThis);
 
 /*** 
     set_status
@@ -42,7 +42,7 @@ zhone_status_t ui_get_status(ui_t* pThis);
 
         returns PASS for success or FAIL for failure
 ***/
-zhone_return_value_t ui_set_status(ui_t* pThis, zhone_status_t newStatus);
+return_value_t ui_set_status(ui_t* pThis, phone_status_t newStatus);
 
 /***
     button1_ISR & button2_ISR

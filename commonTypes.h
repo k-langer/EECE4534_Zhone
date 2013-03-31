@@ -7,7 +7,7 @@
 ***/
 
 /***
-    zhone_return_value_t
+    return_value_t
         -enum for return values of functions
         -add new return values here if necessary!
 ***/
@@ -16,7 +16,7 @@ typedef enum {
     PASS,
     FAIL,
     NO_DATA_AVAILABLE
-} zhone_return_value_t;
+} return_value_t;
 
 
 /***
@@ -42,6 +42,6 @@ typedef enum {
     END_CALL,
     ACCEPT_CALL,
     REJECT_CALL
-} zhone_status_t;
+} phone_status_t;
 
 #endif

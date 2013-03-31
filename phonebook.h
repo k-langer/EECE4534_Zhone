@@ -24,7 +24,7 @@ typedef struct {
 
     returns PASS on success or FAIL on failure
 ***/
-zhone_return_value_t phonebook_init(phonebook_t* pThis, zhone_address_t address1, zhone_address_t address2);
+return_value_t phonebook_init(phonebook_t* pThis, zhone_address_t address1, zhone_address_t address2);
 
 /***
     getAddress1/getAddress2

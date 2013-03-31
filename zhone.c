@@ -8,7 +8,7 @@
 
 
 int main() {
-    zhone_status_t testStatus = IN_CALL;
+    phone_status_t testStatus = IN_CALL;
     
     if (testStatus == IN_CALL) {
         testStatus = IDLE;
