@@ -26,15 +26,5 @@ typedef struct {
 ***/
 return_value_t phonebook_init(phonebook_t* pThis, zhone_address_t address1, zhone_address_t address2);
 
-/***
-    getAddress1/getAddress2
-
-    pThis - pointer to phonebook from which to retrieve an address
-    
-    returns desired address as an zhone_address_t
-***/
-zhone_address_t phonebook_get_address1(phonebook_t* pThis);
-zhone_address_t phonebook_get_address2(phonebook_t* pThis);
-
 #endif
     
