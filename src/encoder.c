@@ -3,7 +3,8 @@
   encoded chunk 
 */
 
-chunk_t encoder(chunk_t* pThis) {
-    //Encode data at a chunk granularity         
-    return chunk_t* pThis;  
+encodedChunk_t* encoder(chunk_t* pThis) {
+    //Encode data at a chunk granularity   
+    encodedChunk_t* encodedChunk = (encodedChunk_t*) pThis;
+    return encodedChunk;  
 }
