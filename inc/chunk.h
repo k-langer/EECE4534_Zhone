@@ -20,3 +20,4 @@ typedef struct {
 } chunk_t;
 
 typedef chunk_t encodedChunk_t; 
+#endif
