@@ -18,3 +18,5 @@ typedef struct {
   e_buff_status_t     e_status;     /** status */ 
   
 } chunk_t;
+
+typedef chunk_t encodedChunk_t; 
