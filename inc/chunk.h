@@ -13,3 +13,8 @@ typedef struct {
     signed short        s16_buff[SAMPLE_SIZE/2];
     signed int          s32_buff[SAMPLE_SIZE/4];
   };
+  int                 bytesMax;         /** total number bytes in chunk */ 
+  int                 bytesUsed;          /** used bytes in chunk (fill level) */
+  e_buff_status_t     e_status;     /** status */ 
+  
+} chunk_t;
