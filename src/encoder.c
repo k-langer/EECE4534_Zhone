@@ -1,4 +1,5 @@
-#import "chunk.h"
+#include "chunk.h"
+#include "commonTypes.h"
 /*The encoder accepts the location of a chunk, 
   encodes it, and returns the location of the 
   encoded chunk 
