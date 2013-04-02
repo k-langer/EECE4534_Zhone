@@ -4,8 +4,8 @@ decodes it, and returns the location of the
 decoded chunk
 */
 
-chunk_t* decoder(encodedChunk_t* pThis) {
+audioChunk_t* decoder(dataChunk_t* pThis) {
     //Decode data at a chunk granularity
-    chunk_t* chunk = (chunk_t*) pThis;
+    audioChunk_t* chunk = (audioChunk_t*) pThis;
     return chunk;
 }
