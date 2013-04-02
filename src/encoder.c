@@ -4,8 +4,8 @@
   encoded chunk 
 */
 
-encodedChunk_t* encoder(chunk_t* pThis) {
+dataChunk_t* encoder(audioChunk_t* pThis) {
     //Encode data at a chunk granularity   
-    encodedChunk_t* encodedChunk = (encodedChunk_t*) pThis;
-    return encodedChunk;  
+    dataChunk_t* chunk = (dataChunk_t*) pThis;
+    return chunk;  
 }
