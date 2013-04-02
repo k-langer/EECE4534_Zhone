@@ -1,3 +1,4 @@
+#import "chunk.h"
 /*The encoder accepts the location of a chunk, 
   encodes it, and returns the location of the 
   encoded chunk 
