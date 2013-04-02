@@ -13,7 +13,6 @@
 typedef struct {
     audio_input_t audio_input;
     encoder_t encoder;
-    decoder_t decoder; 
     xbee_tx_t* xbee_tx;
 
     queue_t encoder_input_queue;
