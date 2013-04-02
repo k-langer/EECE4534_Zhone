@@ -1,6 +1,8 @@
 #ifndef COMMONTYPES_H
 #define COMMONTYPES_H
 
+#include "chunk.h"
+
 /***
     Common Types
         -header file containing any typedefs we decide to create for clearer code
@@ -43,5 +45,14 @@ typedef enum {
     ACCEPT_CALL,
     REJECT_CALL
 } phone_status_t;
+
+/***
+	Chunk from audio transmit and receive
+***/
+typedef chunk_t audioChunk_t; 
+/***
+	Chunk for Xigbee_tx and Xigbee_rx
+***/
+typedef chunk_t dataChunk_t;
 
 #endif
