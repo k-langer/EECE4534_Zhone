@@ -23,58 +23,63 @@ volatile unsigned short *pPORTFIO_DIR = (unsigned short*)0xFFC00730;
 volatile unsigned short *pPORTFIO_INEN = (unsigned short*)0xFFc00740;
 volatile unsigned short *pPORTFIO = (unsigned short*)0xFFC00700;
 
-return_value_t Display_init() { 
-	//LED is lower 8 bits of portF 
-	*pPORTF_FER &= 0x00; 
+return_value_t display_init() { 
+ 
+	*pPORTF_FER &= 0x00;		  //LED is lower 8 bits of portF
 	*pPORTFIO_DIR &= 0XFF; 
 	*pPORTFIO_INEN &= 0x00;  
 	
-	Display_mainMenu(); //Display the main menu when initialized 
+	display_mainMenu();           //Display the main menu when initialized 
 
 	return PASS; 
 }
 
 
-return_value_t Display_mainMenu() { 
+return_value_t display_mainMenu() { 
 	//Enable LED0/LED7 
 	*pPORTFIO &= 0x00; 
 	busy_wait(10000000);
 	*pPORTFIO |= 0x81;
+	busy_wait( 10000000 );
 
 	return PASS;
 }
 
-return_value_t Display_receiveMenu(phonebook_t * pThis, zhone_address_t address1, zhone_address_t address2) { 
+return_value_t display_receiveMenu1() { 
 	 
-	if( address1 ) { 
+	
 	*pPORTFIO &= 0x00;
 	busy_wait( 10000000 );
 	*pPORTFIO |= 0x10; 
-	
+	busy_wait( 10000000 );
 
-	} else if( address2 ) {
-	*pPORTFIO &= 0x00; 	
-	busy_wait( 10000000 );
-	*pPORTFIO |= 0x01; 
-	}
-	busy_wait( 10000000 );
-	
-	
 	return PASS;
 } 
 
+return_value_t display_receiveMenu2() {
 
-return_value_t Display_makingCallMenu() {	
+	
+	*pPORTFIO &= 0x00; 	
+	busy_wait( 10000000 );
+	*pPORTFIO |= 0x01; 
+	busy_wait( 10000000 );
+
+	return PASS; 
+}
+
+
+return_value_t display_makingCallMenu() {	
 	
     *pPORTFIO &= 0x00; 
 	busy_wait( 10000000 );
 	*pPORTFIO |= 0xFF; 
+	busy_wait( 10000000 );
 
     return PASS;
 } 
 
 
-return_value_t Display_inCallMenu() { 
+return_value_t display_inCallMenu() { 
 
     *pPORTFIO |= 0xFF; 
 	return PASS;
@@ -90,15 +95,16 @@ void busy_wait(unsigned int cycles)
 	}
 }
 
-
-int main() { //test each function individually 
-	Display_init(); 
-	Display_mainMenu;
-	//Display_receiveMenu(*pThis, address1, address2); ???????
-	Display_makingCallMenu(); 
-	Display_inCallMenu(); 
+/*
+int main() { //for testing purposes 
+	display_init(); 
+	display_mainMenu();
+	display_receiveMenu1();
+	display_receiveMenu2();
+	display_makingCallMenu(); 
+	display_inCallMenu(); 
 } 
-
+*/
 
 
 

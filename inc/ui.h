@@ -8,10 +8,15 @@
         -track status
         -allow getting and setting of status
         -update status and LED output through ISRs
+
+	To Do: 
+	- After a call ends, status needs to be set back to idle, this is not detected by an ISR 
+	- After a user hangs up, the status needs to be set back to idle (it is currently set to END_CALL) 
 ***/
 
 typedef struct {
-    phone_status_t status;
+    
+	phone_status_t status;
 } ui_t;
 
 /***

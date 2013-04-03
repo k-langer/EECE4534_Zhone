@@ -14,7 +14,7 @@
 
 return_value_t ui_init(ui_t *pThis) { 	
 	//Button_init(); Add the Button_init  
-	Display_init();
+	display_init();
 
 	return PASS; 
 } 
@@ -42,27 +42,47 @@ phone_status_t ui_get_status(ui_t* pThis) {
         returns PASS for success or FAIL for failure
 ***/
 return_value_t ui_set_status(ui_t* pThis, phone_status_t newStatus) {
-	//everything something happens, get status 
-
-	pThis->status = newStatus;
 	
+	pThis->status = newStatus;
+	return PASS; 
 } 
 
 
 /***
     button1_ISR (left push button) 
         -check status to determine state of system
-        -update status        
+        -update status depending on the currentStatus        
         -update LEDs for user
 
         pThis - pointer to ui object to be updated
 ***/
 
 
-void ui_button1_ISR(ui_t* pThis) {
+
+void ui_button1_ISR ( ui_t* pThis ) { 
+    
+	phone_status_t currentStatus = ui_get_status( pThis ); 
 	
+	if ( currentStatus == IDLE ) {	 
+    
+		ui_set_status( pThis,CALL1 );       //call user1 (when ZigBee detects this and starts sending packets, it needs to change status to DIALING)
+		display_makingCallMenu();	        //update the LED display
 
+	} else if ( currentStatus == RECEIVING1 ) { 
 
+		ui_set_status( pThis,IN_CALL );    //accept a call from user1 -> go to IN_CALL
+		display_inCallMenu();              //update LED display 
+
+	} else if ( currentStatus == RECEIVING2 ) { 
+
+		ui_set_status( pThis,IN_CALL );    //accept a call from user2 -> go to IN_CALL
+		display_inCallMenu();              //update LED display 
+	
+	} else if ( currentStatus == IN_CALL ) { 
+	
+		ui_set_status( pThis,END_CALL );        //hang up and change status to END_CALL. Zhone will change status to idle 
+		display_mainMenu();                 //update LED display 
+	}
 }
 
 
@@ -74,76 +94,35 @@ void ui_button1_ISR(ui_t* pThis) {
 
         pThis - pointer to ui object to be updated
 ***/
-void ui_button2_ISR(ui_t* pThis) {
+void ui_button2_ISR( ui_t* pThis ) {
 
+	phone_status_t currentStatus = ui_get_status( pThis ); 
+	if ( currentStatus == IDLE) {     
 
-}
+	    ui_set_status( pThis,CALL2 );       //call user2 (when ZigBee detects this and starts sending packets, it needs to change status to DIALING)
+		display_makingCallMenu();           //update the LED display
 
+	} else if ( currentStatus == RECEIVING1 ) {
 
+		ui_set_status( pThis,IDLE );        //decline a call from user1 -> go to idle
+		display_mainMenu();                 //update the LED display
+    
+	} else if ( currentStatus == RECEIVING2 ) {
 
-
-//thoughts:
-//interrupt depending on the state!? 
-//the whole point of an interrupt is the change the state, this is what the ISR needs to do 
-//ISR can check what the current state is and then do appropriate work 
-//interrupts come from button module. button module initializes the portF to prepare for interrupts 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//the ISR handler is going to be different depending on the current state. 
-
-
-int receiveCall_ISR_handler() { //execute this when user is receiving a call 
+		ui_set_status( pThis,IDLE );        //decline a call from user2 -> go to idle
+		display_mainMenu();                 //update the LED display
 	
+	} else if ( currentStatus == IN_CALL ) {  
 
-}
+		ui_set_status( pThis,END_CALL );        //Hang up -> go to END_CALL to send the last packet. Zhone will then change state to idle   
+		display_mainMenu();                 //update LED display 
 
-int makingCall_ISR_handler() { //execute this when user makes a call from main menu  
-
-}
-
-int inCall_ISR_handler() { 
-
-} 
-
-
-int userInterface_start() { 
-	
-} 
-
-
-/*
-if(idle) { //idle state
-//Display LED1 and LED7 to the user  
-}
-
-else if (receiveCall) { //receive call 
-//blink corresponding when receiving a cal 
-}
-
-else if (makingCall) { 
-//blink all LEDs
-}
-
-else if (inCall) {
-//hold all of the LED lights ON when in a call 
+	}
 }
 
 
 
-}
 
-*/
+
+
+

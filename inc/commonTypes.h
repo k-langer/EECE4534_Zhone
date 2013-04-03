@@ -1,8 +1,6 @@
 #ifndef COMMONTYPES_H
 #define COMMONTYPES_H
 
-#include "chunk.h"
-
 /***
     Common Types
         -header file containing any typedefs we decide to create for clearer code
@@ -37,22 +35,14 @@ typedef unsigned short zhone_address_t;
 typedef enum {
     IDLE,
     IN_CALL,
-    RECEIVING,
-    DIALING,
-    CALL1,
+    RECEIVING1,    //getting a call from user1
+	RECEIVING2,    //getting a call from user2 
+    //DIALING,     //calling someone is impliying that you are dialing them 
+    CALL1,        
     CALL2,
-    END_CALL,
-    ACCEPT_CALL,
-    REJECT_CALL
+    END_CALL, 
+    //ACCEPT_CALL,  
+    //REJECT_CALL   
 } phone_status_t;
-
-/***
-	Chunk from audio transmit and receive
-***/
-typedef chunk_t audioChunk_t; 
-/***
-	Chunk for Xigbee_tx and Xigbee_rx
-***/
-typedef chunk_t dataChunk_t;
 
 #endif

@@ -22,7 +22,7 @@
 	returns PASS on success or FAIL on failure 
 ***/
 
-return_value_t Display_init();
+return_value_t display_init();
 
 /***
 
@@ -32,16 +32,19 @@ return_value_t Display_init();
 	Turns on LEDs 0 and 7 
 ***/
 
-return_value_t Display_mainMenu(); 
+return_value_t display_mainMenu(); 
 
 /***
 	receiveMenu
 
 	Blinks the LED that is calling the user on and off 
-	We need to know who is calling so we include the phonebook object and its member variables 
+	User 1 corresponds to the leftmost LED, User 2 corresponds to the rightmost LED
 ***/
 
-return_value_t Display_receiveMenu(phonebook_t *pThis, zhone_address_t address1, zhone_address_t address2);
+return_value_t display_receiveMenu1();
+
+return_value_t display_receiveMenu2();
+
 
 /***
 	makingCallMenu
@@ -49,7 +52,7 @@ return_value_t Display_receiveMenu(phonebook_t *pThis, zhone_address_t address1,
 	Blinks all the LEDs on and off to indicate that you are making a call 	
 ***/
 
-return_value_t Display_makingCallMenu();
+return_value_t display_makingCallMenu();
 
 /***
 	inCallMenu
@@ -57,7 +60,7 @@ return_value_t Display_makingCallMenu();
 	Hold all of the LEDs on to indicate that you are in a call 
 ***/
 
-return_value_t Display_inCallMenu(); 
+return_value_t display_inCallMenu(); 
 
 
 /***
