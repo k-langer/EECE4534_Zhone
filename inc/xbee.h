@@ -51,24 +51,6 @@ typedef struct {
     unsigned char length;
 } xbee_receive_message_t;
 
-typedef enum {
-    XBEE_START = 0,
-    XBEE_LENGTH_MSB,
-    XBEE_LENGTH_LSB,
-    XBEE_PAYLOAD,
-    XBEE_CRC,
-    XBEE_END
-} xbee_message_state_t;
-
-typedef enum {
-    XBEE_RECEIVE_API_ID = 0,
-    XBEE_RECEIVE_SOURCE_MSB,
-    XBEE_RECEIVE_SOURCE_LSB,
-    XBEE_RECEIVE_SIGNAL_LEVEL,
-    XBEE_RECEIVE_OPTIONS,
-    XBEE_RECEIVE_DATA
-} xbee_receive_message_state_t;
-
 void Xbee_Init( int fd );
 
 /** Transmit message through the Xbee module
@@ -97,7 +79,25 @@ int Xbee_GetMessage( unsigned char *pMessage, unsigned char *pLength );
  *
  * @return Zero on success, positive otherwise
  */
-int Xbee_PackMessage( xbee_message_t *msg, unsigned char *pMsg, unsigned char *pLength  );
+int Xbee_PackMessage( xbee_message_t *pXbee_msg, unsigned char *pMsg, unsigned char *pLength  );
+
+/** Unpacks a raw byte message
+ * 
+ * @param pMsg      initial message byte store
+ * @param length    length of the byte message
+ * @param pXbee_msg message that will contain the value from the raw byte message
+ *
+ * @return Zero on success, positive otherwise
+ */
+int Xbee_UnpackMessage( unsigned char *pMsg, unsigned char length, xbee_message_t *pXbee_msg );
+
+/** Prints an Xbee message in a friendly format
+ *
+ * @param pMsg  the xbee message to print
+ *
+ * @return Zero on sucess, positive otherwise
+ */
+int Xbee_PrintMessage(xbee_message_t *pMsg);
 
 /** Sends a transmit message to the desired address with the given data
  *
@@ -119,7 +119,7 @@ int Xbee_SendTransmitMessage( unsigned short to, unsigned char *pData, unsigned 
  *
  * @return Zero on success, positive otherwise
  */
-int Xbee_PackTransmitMessage( xbee_transmit_message_t *msg, unsigned char *pMsg, unsigned char *pLength);
+int Xbee_PackTransmitMessage( xbee_transmit_message_t *pTransmit_msg, unsigned char *pMsg, unsigned char *pLength);
 
 /** Unpack Receive Message
  *
@@ -130,6 +130,14 @@ int Xbee_PackTransmitMessage( xbee_transmit_message_t *msg, unsigned char *pMsg,
  * @return Zero on success, positive otherwise
  */
 int Xbee_UnpackReceiveMessage( xbee_message_t *pMsg, xbee_receive_message_t *pMessage );
+
+/** Prints an Xbee receive message in a friendly format
+ *
+ * @param pMsg  the xbee receive message to print
+ *
+ * @return Zero on sucess, positive otherwise
+ */
+int Xbee_PrintReceiveMessage( xbee_receive_message_t *pMsg );
 
 /** Put the Xbee module into command mode
  *

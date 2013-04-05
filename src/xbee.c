@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
 #include "inc/xbee.h"
 
 int xbee_fd = -1;
@@ -55,11 +56,11 @@ int Xbee_GetMessage( unsigned char *pMessage, unsigned char *pLength )
     int count = 0;
     while (count < 3)
     {
-        length = read(xbee_fd, pMessage+(length++), 120);
-        if (length < 0)
+        length = read(xbee_fd, pMessage, 120);
+        if (length <= 0)
         {
             count++;
-            usleep(100000);
+            usleep(33333);
         }
         else
         {
@@ -72,7 +73,7 @@ int Xbee_GetMessage( unsigned char *pMessage, unsigned char *pLength )
 
 /** Pack an API Message
  *
- * @param msg           xbee message structure to be made into a byte value
+ * @param pXbee_msg     xbee message structure to be made into a byte value
  * @param pMsg          message contents to be replaced with built messagee
  * @param pLength       length of the built message
  *
@@ -101,8 +102,59 @@ int Xbee_PackMessage( xbee_message_t *msg, unsigned char *pMsg, unsigned char *p
     return PASS;
 }
 
-int Xbee_UnpackMessage( unsigned char *pMsg, unsigned char *pLength, xbee_message_t *msg )
+/** Unpacks a raw byte message
+ * 
+ * @param pMsg      initial message byte store
+ * @param length    length of the byte message
+ * @param pXbee_msg message that will contain the value from the raw byte message
+ *
+ * @return Zero on success, positive otherwise
+ */
+int Xbee_UnpackMessage( unsigned char *pMsg, unsigned char length, xbee_message_t *pXbee_msg )
 {
+    unsigned char unpacked_length = 0;
+    unsigned char payload_crc = 0;
+
+    unsigned char payload_length;
+
+    if (pMsg[unpacked_length++] != 0x7e)
+    {
+        return FAIL;
+    }
+    unpacked_length++;  // Messages have a given payload length of two bytes but will only
+                        // ever be one byte in length max (between 0-255)
+    pXbee_msg->length = pMsg[unpacked_length++];
+
+    for (payload_length = 0; payload_length < pXbee_msg->length; payload_length++)
+    {
+        pXbee_msg->payload[payload_length] = pMsg[unpacked_length++];
+        payload_crc += pXbee_msg->payload[payload_length];
+    }
+
+    if ((0xff - payload_crc) != pMsg[unpacked_length++] || unpacked_length != length)
+    {
+        return FAIL;
+    }
+    pMsg = pMsg + unpacked_length;
+    return PASS;
+}
+
+/** Prints an Xbee message in a friendly format
+ *
+ * @param pMsg  the xbee message to print
+ *
+ * @return Zero on sucess, positive otherwise
+ */
+int Xbee_PrintMessage(xbee_message_t *pMsg)
+{
+    printf("Length: %d\n", pMsg->length);
+    printf("Payload:");
+    unsigned char length;
+    for (length = 0; length < pMsg->length; length++)
+        printf(" %02x", pMsg->payload[length]);
+    printf("\n");
+
+    return PASS;
 }
 
 /** Sends a transmit message to the desired address with the given data
@@ -139,27 +191,27 @@ int Xbee_SendTransmitMessage( unsigned short to, unsigned char *pData, unsigned 
 
 /** Pack Transmit Message
  * 
- * @param transmit_msg  transmit message structure of data
+ * @param pTransmit_msg transmit message structure of data
  * @param pMsg          message to overwrite with data
  * @param pLength       length to overwrite
  *
  * @return Zero on success, positive otherwise
  */
-int Xbee_PackTransmitMessage( xbee_transmit_message_t *transmit_msg, unsigned char *pMsg, unsigned char *pLength)
+int Xbee_PackTransmitMessage( xbee_transmit_message_t *pTransmit_msg, unsigned char *pMsg, unsigned char *pLength)
 {
     xbee_message_t *xbee_msg = (xbee_message_t *)malloc(sizeof(xbee_message_t));
     xbee_msg->length = 0;
 
     xbee_msg->payload[xbee_msg->length++] = 0x01;
     xbee_msg->payload[xbee_msg->length++] = 0x01;
-    xbee_msg->payload[xbee_msg->length++] = (transmit_msg->to >> 8);
-    xbee_msg->payload[xbee_msg->length++] = (transmit_msg->to & 0xff);
+    xbee_msg->payload[xbee_msg->length++] = (pTransmit_msg->to >> 8);
+    xbee_msg->payload[xbee_msg->length++] = (pTransmit_msg->to & 0xff);
     xbee_msg->payload[xbee_msg->length++] = 0x00;
     
     unsigned char i;
-    for (i = 0; i < transmit_msg->length; i++)
+    for (i = 0; i < pTransmit_msg->length; i++)
     {
-        xbee_msg->payload[xbee_msg->length++] = transmit_msg->pData[i];
+        xbee_msg->payload[xbee_msg->length++] = pTransmit_msg->pData[i];
     }
 
     return Xbee_PackMessage(xbee_msg, pMsg, pLength);
@@ -175,22 +227,40 @@ int Xbee_PackTransmitMessage( xbee_transmit_message_t *transmit_msg, unsigned ch
 int Xbee_UnpackReceiveMessage( xbee_message_t *pMsg, xbee_receive_message_t *pMessage )
 {
     unsigned char parsed_length = 0;
-    xbee_receive_message_state_t state = XBEE_RECEIVE_API_ID;
 
-    if (pMsg->payload[parsed_length++] == XBEE_RECEIVE_API_BYTE)
+    if (pMsg->payload[parsed_length++] != XBEE_RECEIVE_API_BYTE)
     {
-        state = XBEE_RECEIVE_SOURCE_MSB;
-    } else {
         return FAIL;
     }
 
-    pMessage->from = ((pMsg->payload[parsed_length++] << 8) | (pMsg->payload[parsed_length++] & 0xff));
+    pMessage->from = (pMsg->payload[parsed_length++] << 8) & 0xff00;
+    pMessage->from |= (pMsg->payload[parsed_length++] & 0x00ff);
     pMessage->signal_strength = pMsg->payload[parsed_length++];
     pMessage->options = pMsg->payload[parsed_length++];
     while (parsed_length < pMsg->length)
     {
         pMessage->pData[pMessage->length++] = pMsg->payload[parsed_length++];
     }
+
+    return PASS;
+}
+
+/** Prints an Xbee receive message in a friendly format
+ *
+ * @param pMsg  the xbee receive message to print
+ *
+ * @return Zero on sucess, positive otherwise
+ */
+int Xbee_PrintReceiveMessage( xbee_receive_message_t *pMsg )
+{
+    printf("From: %02x %02x\n", pMsg->from >> 8, pMsg->from & 0xff);
+    printf("Signal: %02x\n", pMsg->signal_strength);
+    printf("Length: %d\n", pMsg->length);
+    printf("Data:");
+    unsigned char length;
+    for (length = 0; length < pMsg->length; length++)
+        printf(" %02x", pMsg->pData[length]);
+    printf("\n");
 
     return PASS;
 }
