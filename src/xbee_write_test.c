@@ -49,9 +49,12 @@ int main( void )
     unsigned short to = 0x0001;
 
     int i = 0;
-    Xbee_SendTransmitMessage(to, msg, 5);
-    usleep(100000);
-    printf("Sent: %d\n", i++);
+    while (1)
+    {
+        Xbee_SendTransmitMessage(to, msg, 5);
+        usleep(100000);
+        printf("Sent: %d\n", i++);
+    }
 
     return 0 ;
 }
