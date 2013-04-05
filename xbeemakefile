@@ -1,0 +1,3 @@
+all:
+	gcc inc/xbee.h src/xbee.c src/xbee_read_test.c -o xbee_read.out -I.
+	gcc inc/xbee.h src/xbee.c src/xbee_write_test.c -o xbee_write.out -I.
