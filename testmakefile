@@ -1,0 +1,40 @@
+CC = bfin-elf-gcc
+
+# -- Compile Flags
+CFLAGS = -Wall -specs=$(TLL6527M_C_DIR)/common/inc/spec/tll6527m 
+# add debug flag 
+CFLAGS += -g
+
+TARGET = uart-blackfin
+
+# -- Include Path
+INC_PATH = -Iinc
+
+OBJS = test/uart.o 
+	   #src/uartRx.o
+
+# --- Libraries 	
+LIBS     = -ltll6527mC   
+
+# Linker file 
+LDFLAGS = -T$(TLL6527M_C_DIR)/common/inc/spec/tll6527m_sdram.lds
+
+# check that TLL6527M_C_DIR variable is defined before starting
+ifeq ($(TLL6527M_C_DIR),)
+$(error ERROR: TLL6527M_C_DIR environment var not set! Source environment settings first (e.g. source setup.csh))
+endif
+
+# --- Compilation 
+all: $(TARGET)
+
+# link final binary
+$(TARGET):$(OBJS) 
+	$(CC) $(INC_PATH) $(LIB_PATH) $(CFLAGS) -o $@ $^ $(LIBS) $(LDFLAGS)
+
+# pattern rule for compiling into object files
+.c.o:
+	$(CC)  $(INC_PATH) -g -c $(CFLAGS)  -o $@ $<  
+
+xbee-linux:
+	gcc inc/xbee.h src/xbee.c test/xbee_read.c -o xbee_read.out -Iinc/
+	gcc inc/xbee.h src/xbee.c test/xbee_write.c -o xbee_write.out -Iinc/

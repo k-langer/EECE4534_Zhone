@@ -18,7 +18,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
-#include "inc/xbee.h"
+#include "xbee.h"
 
 int xbee_fd = -1;
 
