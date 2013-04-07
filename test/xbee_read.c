@@ -8,7 +8,7 @@
 #include <fcntl.h>   /* File control definitions */
 #include <errno.h>   /* Error number definitions */
 #include <termios.h> /* POSIX terminal control definitions */
-#include "inc/xbee.h"
+#include "xbee.h"
 
 int main( void )
 { 
