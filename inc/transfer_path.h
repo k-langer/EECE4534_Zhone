@@ -2,6 +2,11 @@
 #define TRANSFER_PATH_H
 
 #include "commonTypes.h"
+#include "queue.h"
+#include "bufferPool.h"
+#include "audioRx.h"
+#include "isrDisp.h"
+#include "uartTx.h"
 
 /***
     Transfer Path
@@ -11,10 +16,12 @@
 ***/
 
 typedef struct {
-    audio_input_t audio_input;
+    audioRx_t audio_rx;
     encoder_t encoder;
-    xbee_tx_t* xbee_tx;
+    uartTx_t* pUartTx;
 
+    isrDisp_t* pIsrDisp;
+    bufferPool_t* pBufferPool;
     queue_t encoder_input_queue;
     queue_t xbee_tx_input_queue;
 } transfer_path_t;
@@ -27,10 +34,16 @@ typedef struct {
 
         returns PASS on success or FAIL on failure
 ***/
-return_value_t transfer_path_init( transfer_path_t* pThis );
+return_value_t transfer_path_init( transfer_path_t* pThis, bufferPool_t* pBufferPool, isrDisp_t* pIsrDisp, uartTx_t* pUartTx );
 
 /***
-    run
+ * start
+ *
+ */
+return_value_t transfer_path_start( transfer_path_t* pThis );
+
+/***
+    process_chunk
         -if a chunk is available on encoder_input_queue, 
             encodes the chunk and passes it to xbee_tx_input_queue
         -if no chunk is availabe, exits
@@ -39,7 +52,7 @@ return_value_t transfer_path_init( transfer_path_t* pThis );
 
         returns PASS if chunk was processed, NO_DATA_AVAILABLE if no data was available, or FAIL on failure
 ***/
-return_value_t transfer_path_run( transfer_path_t* pThis );
+return_value_t transfer_path_process_chunk( transfer_path_t* pThis );
 
 /***
     stop

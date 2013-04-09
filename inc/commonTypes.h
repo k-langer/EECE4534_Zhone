@@ -35,14 +35,13 @@ typedef unsigned short zhone_address_t;
 typedef enum {
     IDLE,
     IN_CALL,
-    RECEIVING1,    //getting a call from user1
-	RECEIVING2,    //getting a call from user2 
-    //DIALING,     //calling someone is impliying that you are dialing them 
+    RECEIVING,
+    DIALING,     //calling someone is impliying that you are dialing them
     CALL1,        
     CALL2,
     END_CALL, 
-    //ACCEPT_CALL,  
-    //REJECT_CALL   
+    ACCEPT_CALL,
+    REJECT_CALL
 } phone_status_t;
 
 #endif

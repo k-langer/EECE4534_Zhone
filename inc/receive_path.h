@@ -2,6 +2,11 @@
 #define RECEIVE_PATH_H
 
 #include "commonTypes.h"
+#include "queue.h"
+#include "bufferPool.h"
+#include "audioTx.h"
+#include "isrDisp.h"
+#include "uart_Rx.h"
 
 /***
     Receive Path
@@ -11,10 +16,12 @@
 ***/
 
 typedef struct {
-    xbee_rx_t* xbee_rx;
+    uartRx_t* pUartRx;
     decoder_t decoder;
-    audio_output_t audio_output;
+    audioTx_t audio_tx;
 
+    isrDisp_t* pIsrDisp;
+    bufferPool_t* pBufferPool;
     queue_t decoder_input_queue;
     queue_t audio_output_queue;
 } receive_path_t;
@@ -27,10 +34,15 @@ typedef struct {
 
         returns PASS on success or FAIL on failure
 ***/
-return_value_t receive_path_init( receive_path_t* pThis );
+return_value_t receive_path_init( receive_path_t* pThis, bufferPool_t* pBufferPool, isrDisp_t* pIsrDisp, uartRx_t* pUartRx );
+
+/**
+ * start
+ */
+return_value_t receive_path_start( receive_path_t* pThis );
 
 /***
-    run
+    process_chunk
         -if a chunk is available on decoder_input_queue, 
             decodes the chunk and passes it to audio_output_queue
         -if no chunk is availabe, exits
@@ -39,7 +51,7 @@ return_value_t receive_path_init( receive_path_t* pThis );
 
         returns PASS if chunk was processed, NO_DATA_AVAILABLE if no data was available, or FAIL on failure
 ***/
-return_value_t receive_path_run( receive_path_t* pThis );
+return_value_t receive_path_process_chunk( receive_path_t* pThis );
 
 /***
     stop

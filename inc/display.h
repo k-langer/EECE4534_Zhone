@@ -1,8 +1,7 @@
 #ifndef _DISPLAY_H_
 #define _DISPLAY_H_
 
-#include "commontypes.h" 
-#include "phonebook.h" 
+#include "commonTypes.h"
 
 /***
     Display
