@@ -2,6 +2,7 @@
 #define UI_H
 
 #include "commonTypes.h"
+#include "isrDisp.h"
 
 /***
     UI
@@ -28,7 +29,9 @@ typedef struct {
         
         return PASS for success or FAIL for failure
 ***/
-return_value_t ui_init(ui_t* pThis);
+//static isrDisp_t isrDisp; //this will be created in Zhone.c 
+
+return_value_t ui_init( ui_t* pThis );  
 
 /***
     get_status
@@ -57,7 +60,47 @@ return_value_t ui_set_status(ui_t* pThis, phone_status_t newStatus);
 
         pThis - pointer to ui object to be updated
 ***/
-void ui_button1_ISR(ui_t* pThis);
-void ui_button2_ISR(ui_t* pThis);
+void ui_button1_ISR(void* pThis);
+void ui_button2_ISR(void* pThis);
+
+
+
+
+
+
+
+
+
+/***
+
+	Interrupt handling
+
+***/
+
+
+
+
+void test_function(void *pArg); 
+return_value_t interrupt_init(ui_t* pThis); 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #endif
