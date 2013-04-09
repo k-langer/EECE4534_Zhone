@@ -26,7 +26,8 @@ int main ( void )
     
     /* FPGA setup function to configure FPGA, make sure the FPGA configuration
     binary data is loaded in to SDRAM at "FPGA_DATA_START_ADDR" */
-    status = fpga_loader(0x80373f23); //returns 0 if successful and -1 if failed
+    //status = fpga_loader(0x80373f23); //returns 0 if successful and -1 if failed
+    status = fpga_setup();
     if (status) {
         printf("\r\n FPGA Setup Failed"); 
         return -1;
@@ -63,10 +64,14 @@ int main ( void )
 
     //bf52x_uart_deinit();
     //bf52x_uart_init(&settings); 
-    *pPORTF_FER |= 0xc000;
-	*pPORTF_MUX &= ~0x0400;
-	*pPORTF_MUX |= 0x0800;
-    *pPORTFIO_DIR &= ~(0x4000);
+    //*pPORTF_FER |= 0xc000;
+    //*pPORTF_MUX &= ~0x0400;
+    //*pPORTF_MUX |= 0x0800;
+    *pPORTF_FER = 0x0;
+    *pPORTFIO_DIR |= 0x4000;
+    *pPORTFIO_DIR &= ~(0x8000);
+
+    //fpga_outputToPortFEnable(0xff00);
 
     i = 0;
     while (i++ < 750000);
@@ -81,11 +86,12 @@ int main ( void )
     //    return FAIL;
     //}
 
-    char data[100] = {0};
+    unsigned short data = 0;
     printf("D\n");
     while (1) {
-        status = bf52x_uart_receive(data, 1);
-        printf("Data: %s\n", data);
+        data = (*pPORTFIO >> 15);
+        if (data)
+            asm("nop;");
     }
 
     i = 0;
