@@ -1,5 +1,5 @@
  /******************************************************************************
- *@file: xbee.h
+ *@file: xbee.c
  *
  *@brief: 
  *  - Allows communications to and from an Xbee module
