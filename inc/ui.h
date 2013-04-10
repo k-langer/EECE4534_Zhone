@@ -31,7 +31,7 @@ typedef struct {
 ***/
 //static isrDisp_t isrDisp; //this will be created in Zhone.c 
 
-return_value_t ui_init( ui_t* pThis );  
+return_value_t ui_init( ui_t* pThis, isrDisp_t* isrDisp );  
 
 /***
     get_status
@@ -62,44 +62,6 @@ return_value_t ui_set_status(ui_t* pThis, phone_status_t newStatus);
 ***/
 void ui_button1_ISR(void* pThis);
 void ui_button2_ISR(void* pThis);
-
-
-
-
-
-
-
-
-
-/***
-
-	Interrupt handling
-
-***/
-
-
-
-
-void test_function(void *pArg); 
-return_value_t interrupt_init(ui_t* pThis); 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
