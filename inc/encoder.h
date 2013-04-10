@@ -1,7 +1,12 @@
-#ifndef _ENCODER_H_
-#define _ENCODER_H_
+/*
+ * encoder.h
+ *
+ *  Created on: Apr 9, 2013
+ *      Author: pal
+ */
 
-#include "commonTypes.h"
+#ifndef ENCODER_H_
+#define ENCODER_H_
 
 #define QUALITY 8
 #define FRAME_SIZE 160
@@ -17,4 +22,4 @@ typedef struct encoder {
 int encoder_init(encoder_t* pThis);
 int encoder_encode(encoder_t* pThis, chunk_t* pAudioChunk, chunk_t* pDataChunk );
 
-#endif
+#endif /* ENCODER_H_ */

@@ -17,5 +17,6 @@ typedef struct decoder {
 int decoder_init(decoder_t* pThis, int nbBytes);
 int decoder_decode(decoder_t* pThis, chunk_t* pDataChunk, chunk_t* pAudioChunk);
 
+audioChunk_t* decoder( dataChunk_t* pThis );
 
 #endif

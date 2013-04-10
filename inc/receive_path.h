@@ -6,7 +6,8 @@
 #include "bufferPool.h"
 #include "audioTx.h"
 #include "isrDisp.h"
-#include "uart_Rx.h"
+#include "decoder.h"
+#include "communicator.h"
 
 /***
     Receive Path
@@ -16,10 +17,10 @@
 ***/
 
 typedef struct {
-    uartRx_t* pUartRx;
     decoder_t decoder;
     audioTx_t audio_tx;
 
+    wc_t* pCommunicator;
     isrDisp_t* pIsrDisp;
     bufferPool_t* pBufferPool;
 } receive_path_t;
@@ -32,7 +33,7 @@ typedef struct {
 
         returns PASS on success or FAIL on failure
 ***/
-return_value_t receive_path_init( receive_path_t* pThis, bufferPool_t* pBufferPool, isrDisp_t* pIsrDisp, uartRx_t* pUartRx );
+return_value_t receive_path_init( receive_path_t* pThis, bufferPool_t* pBufferPool, isrDisp_t* pIsrDisp, wc_t* pCommunicator );
 
 /**
  * start
