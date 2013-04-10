@@ -77,11 +77,12 @@ int audioRx_init(audioRx_t *pThis, bufferPool_t *pBuffP,
      /* Read, 1-D, interrupt enabled, Memory write operation, 16 bit transfer,
       * Auto buffer
       */
-    *pDMA3_CONFIG = WNR | WDSIZE_16 | DI_EN | DI_EN;
+    *pDMA3_CONFIG = WNR | WDSIZE_16 | DI_EN | FLOW_AUTO;
 
     /**
      * Register the interrupt handler
      */
+
     isrDisp_registerCallback(pIsrDisp, ISR_DMA3_SPORT0_RX, audioRx_isr, pThis);
     
     printf("[ARX]: RX init complete\n");
@@ -180,14 +181,11 @@ void audioRx_isr(void *pThisArg)
 int audioRx_get(audioRx_t *pThis, chunk_t *pChunk)
 {
     chunk_t                  *chunk_rx;
-    int                         count                   = 0;
     
     /* Block till a chunk arrives on the rx queue */
     while( queue_is_empty(&pThis->queue) ) {
-        powerMode_change(PWR_ACTIVE);
-        asm("idle;");
+    	asm("nop;");
     }
-    powerMode_change(PWR_FULL_ON);
     
     queue_get(&pThis->queue, (void**)&chunk_rx);
 
@@ -197,7 +195,6 @@ int audioRx_get(audioRx_t *pThis, chunk_t *pChunk)
         return FAIL;
     }
     
-
     return PASS;
 }
 

@@ -18,12 +18,9 @@ CFLAGS += -g -O0
 INC_PATH = -I ../inc
 
 # -- Objects 
-OBJS =  zhone.o \
-	phonebook.o \
-	encoder.o \
-	decoder.o \
-	audioTx.o \
-	audioRx.o
+OBJS =  main.o \
+		audioRx.o \
+		audioTx.o
 
 # --- Libraries 	
 LIBS     = -ltll6527mC   

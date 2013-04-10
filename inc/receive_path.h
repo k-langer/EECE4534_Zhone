@@ -22,8 +22,6 @@ typedef struct {
 
     isrDisp_t* pIsrDisp;
     bufferPool_t* pBufferPool;
-    queue_t decoder_input_queue;
-    queue_t audio_output_queue;
 } receive_path_t;
 
 /***

@@ -9,10 +9,10 @@
  *
  * @author  Gunar Schirner
  *          Rohan Kangralkar
- * @date 	03/15/2009
+ * @date 03/15/2009
  *
  * LastChange:
- * $Id: audioTx.c 7 2013-03-29 03:06:06Z ovaskevi $
+ * $Id: audioTx.c 814 2013-03-12 03:59:36Z ovaskevi $
  *
  *******************************************************************************/
 #include "tll_common.h"
@@ -23,7 +23,6 @@
 #include <tll_sport.h>
 #include <queue.h>
 #include <power_mode.h>
-
 
 /** 
  * Configures the DMA tx with the buffer and the buffer length to 
@@ -36,7 +35,7 @@ void audioTx_dmaConfig(chunk_t *pchunk)
 {
     DISABLE_DMA(*pDMA4_CONFIG);
     *pDMA4_START_ADDR   = &pchunk->u16_buff[0]; /* set the start address */
-    *pDMA4_X_COUNT      = pchunk->bytesMax/2;  // 16 bit data so we change the stride and count
+    *pDMA4_X_COUNT      = pchunk->bytesUsed/2;  // 16 bit data so we change the stride and count
     *pDMA4_X_MODIFY     = 2;  /* the increment count */
     ENABLE_DMA(*pDMA4_CONFIG); /* enable the DMA */
 }
@@ -60,7 +59,7 @@ int audioTx_init(audioTx_t *pThis, bufferPool_t *pBuffP,
 {
     // paramter checking
     if ( NULL == pThis || NULL == pBuffP || NULL == pIsrDisp) {
-        printf("[ATX]: Failed init\n");
+        printf("[ATX]: Failed init\r\n");
         return FAIL;
     }
     
@@ -80,7 +79,7 @@ int audioTx_init(audioTx_t *pThis, bufferPool_t *pBuffP,
     // register own ISR to the ISR dispatcher
     isrDisp_registerCallback(pIsrDisp, ISR_DMA4_SPORT0_TX, audioTx_isr, pThis);
     
-    printf("[ARX]: TX init complete\n");
+    printf("[ARX]: TX init complete\r\n");
     
     return PASS;
 }
@@ -98,7 +97,7 @@ int audioTx_init(audioTx_t *pThis, bufferPool_t *pBuffP,
 int audioTx_start(audioTx_t *pThis)
 {
      
-    printf("[AUDIO TX]: audioTx_start: implemented\n");    
+    printf("[AUDIO TX]: audioTx_start: implemented\r\n");
 
     // empty nothing to be done, DMA kicked off during run time 
     return PASS;   
@@ -129,14 +128,14 @@ void audioTx_isr(void *pThisArg)
         /* Remove the  data from the queue and create space for more data
            The data was read previously by the DMA
          */
-         /* fist attempt to get new chunk */
+         /* first attempt to get new chunk */
         if(PASS == queue_get(&pThis->queue, (void **)&pchunk) ) {
-                /* release old chunk on success */
+                /* release old chunk on success t buffer pool */
                bufferPool_release(pThis->pBuffP, pThis->pPending);
                /* register new chunk as pending */
                pThis->pPending = pchunk;
         } else {
-            //printf("TX Q Emtpy\n");
+            printf("TX Q Emtpy\r\n");
         }
         *pDMA4_IRQ_STATUS  |= 0x0001;     // Clear the interrupt
         
@@ -153,53 +152,43 @@ void audioTx_isr(void *pThisArg)
  *    if queue is full, then chunk is dropped 
  * Parameters:
  * @param pThis  pointer to own object
- * @param pChunk Pointer to chunk
  *
  * @return Zero on success.
  * Negative value on failure.
  */
 int audioTx_put(audioTx_t *pThis, chunk_t *pChunk)
 {
-    chunk_t                  *pchunk_temp         = NULL;
+//    chunk_t                  *pchunk_temp         = NULL;
+    int                         count                   = 0;
     
     if ( NULL == pThis || NULL == pChunk ) {
-        printf("[TX]: Failed to put\n");
+        printf("[TX]: Failed to put\r\n");
         return FAIL;
     }
     
     // block if queue is full
     while(queue_is_full(&pThis->queue) ) {
-        printf("[TX]: Queue Full\n");
+        printf("[TX]: Queue Full\r\n");
         powerMode_change(PWR_ACTIVE);
         asm("idle;");
     }
     powerMode_change(PWR_FULL_ON);
     
-    // get free chunk from pool 
-    if ( PASS == bufferPool_acquire(pThis->pBuffP, &pchunk_temp) ) {
-        // copy chunk into free buffer for queue 
-        //   (manually since memcpy is not working)
-        chunk_copy(pChunk, pchunk_temp);
-        
-        /* If DMA not running ? */
-        if ( 0 == pThis->running ) {
-            /* directly put chunk to DMA transfer & enable */
-            pThis->running  = 1;
-            pThis->pPending = pchunk_temp;
-            audioTx_dmaConfig(pThis->pPending);  
-            ENABLE_SPORT0_TX();  
-        } else { 
-            /* DMA already running add chunk to queue */
-            if ( PASS != queue_put(&pThis->queue, pchunk_temp) ) {
-                
-                // return chunk to pool if queue is full, effectively dropping the chunk
-                bufferPool_release(pThis->pBuffP, pchunk_temp);
-                return FAIL;
-            }
+    /* If DMA not running ? */
+    if ( 0 == pThis->running ) {
+        /* directly put chunk to DMA transfer & enable */
+        pThis->running  = 1;
+        pThis->pPending = pChunk;
+        audioTx_dmaConfig(pThis->pPending);  
+        ENABLE_SPORT0_TX();  
+    } else { 
+        /* DMA already running add chunk to queue */
+        if ( PASS != queue_put(&pThis->queue, pChunk) ) {
+            
+            // return chunk to pool if queue is full, effectively dropping the chunk
+            bufferPool_release(pThis->pBuffP, pChunk);
+            return FAIL;
         }
-    } else {
-        // drop if we dont get free space 
-        printf("[TX] failed to get buffer\n");
     }
     
     return PASS;
