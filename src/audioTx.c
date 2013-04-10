@@ -192,9 +192,9 @@ int audioTx_put(audioTx_t *pThis, chunk_t *pChunk)
     return PASS;
 }
 
-return_value_t audioTx_stop( audioTx_t *pThis ) {
+int audioTx_stop( audioTx_t *pThis ) {
 	DISABLE_DMA(*pDMA4_CONFIG);
-
+	queue_init( &( pThis->queue ), AUDIOTX_QUEUE_DEPTH );
 	return PASS;
 }
 

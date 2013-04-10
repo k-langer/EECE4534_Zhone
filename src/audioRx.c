@@ -222,8 +222,9 @@ int audioRx_getNbNc(audioRx_t *pThis, chunk_t **ppChunk)
     }
 }
 
-return_value_t audioRx_stop( audioRx_t *pThis ) {
+int audioRx_stop( audioRx_t *pThis ) {
 	DISABLE_DMA(*pDMA3_CONFIG);
+	queue_init( &( pThis->queue ), AUDIORX_QUEUE_DEPTH );
 
 	return PASS;
 }

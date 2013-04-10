@@ -20,7 +20,6 @@
 #include "queue.h"
 #include "bufferPool.h"
 #include "isrDisp.h"
-#include "commonTypes.h"
 
 /***************************************************
             DEFINES
@@ -99,7 +98,7 @@ void audioTx_isr(void *pThis);
  */
 int audioTx_put(audioTx_t *pThis, chunk_t *pChunk);
 
-return_value_t audioTx_stop( audioTx_t *pThis );
+int audioTx_stop( audioTx_t *pThis );
 
 
 #endif

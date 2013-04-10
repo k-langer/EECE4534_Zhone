@@ -13,7 +13,7 @@
 ***/
 
 typedef enum {
-    PASS,
+	PASS,
     FAIL,
     NO_DATA_AVAILABLE
 } return_value_t;
