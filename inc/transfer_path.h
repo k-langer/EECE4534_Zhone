@@ -6,7 +6,8 @@
 #include "bufferPool.h"
 #include "audioRx.h"
 #include "isrDisp.h"
-#include "uartTx.h"
+#include "communicator.h"
+#include "encoder.h"
 
 /***
     Transfer Path
@@ -18,8 +19,8 @@
 typedef struct {
     audioRx_t audio_rx;
     encoder_t encoder;
-    uartTx_t* pUartTx;
 
+    wc_t* pCommunicator;
     isrDisp_t* pIsrDisp;
     bufferPool_t* pBufferPool;
 } transfer_path_t;
@@ -32,7 +33,7 @@ typedef struct {
 
         returns PASS on success or FAIL on failure
 ***/
-return_value_t transfer_path_init( transfer_path_t* pThis, bufferPool_t* pBufferPool, isrDisp_t* pIsrDisp, uartTx_t* pUartTx );
+return_value_t transfer_path_init( transfer_path_t* pThis, bufferPool_t* pBufferPool, isrDisp_t* pIsrDisp, wc_t* pCommunicator );
 
 /***
  * start
