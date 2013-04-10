@@ -1,8 +1,15 @@
-#ifndef _ENCODER_H_
-#define _ENCODER_H_
+/*
+ * encoder.h
+ *
+ *  Created on: Apr 9, 2013
+ *      Author: pal
+ */
 
-#include "commonTypes.h"
+#ifndef ENCODER_H_
+#define ENCODER_H_
 
-dataChunk_t* encoder( audioChunk_t* pThis );
+typedef struct {
 
-#endif
+} encoder_t;
+
+#endif /* ENCODER_H_ */

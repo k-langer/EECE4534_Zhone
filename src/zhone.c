@@ -4,12 +4,6 @@
 
 
 return_value_t zhone_init( zhone_t* pThis) {
-    
-	/***
-    Initialization 
-        - Declare all of the objects on the next level 
-        - Initializataion all the modules on the next level
-	***/
 
 	zhone_t zhone = *pThis;
 
@@ -20,6 +14,7 @@ return_value_t zhone_init( zhone_t* pThis) {
 	bufferPool_init( &zhone.buffer_pool );
 	phonebook_init( &zhone.phonebook, a1, a2 );
 	ui_init ( &zhone.ui, &zhone.isr_disp );
+	Wc_Init( &zhone.communicator, &zhone.buffer_pool, &zhone.isr_disp );
 	receive_path_init( &zhone.receive_path, &zhone.buffer_pool, &zhone.isr_disp, &zhone.communicator );
 	transfer_path_init( &zhone.transfer_path, &zhone.buffer_pool, &zhone.isr_disp, &zhone.communicator );
 
