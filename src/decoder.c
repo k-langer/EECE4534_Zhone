@@ -1,5 +1,6 @@
 #include "chunk.h"
 #include "commonTypes.h"
+#include "decoder.h"
 
 /*The decoder accepts the location of a chunk,
 decodes it, and returns the location of the
