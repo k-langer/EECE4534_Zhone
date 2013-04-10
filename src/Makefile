@@ -20,7 +20,11 @@ INC_PATH = -I ../inc
 # -- Objects 
 OBJS =  main.o \
 		audioRx.o \
-		audioTx.o
+		audioTx.o \
+		encoder.o \
+		decoder.o \
+		receive_path.o \
+		transfer_path.o
 
 # --- Libraries 	
 LIBS     = -ltll6527mC   

@@ -13,7 +13,7 @@ return_value_t receive_path_init( receive_path_t* pThis, bufferPool_t* pBufferPo
 	receive_path.pCommunicator = pCommunicator;
 
 	audioTx_init( receive_path.audio_tx, receive_path.pBufferPool, receive_path.pIsrDisp );
-	//initialize decoder
+	decoder_init( receive_path.decoder, 10 );
 
 	return PASS;
 }
@@ -37,16 +37,16 @@ return_value_t receive_path_stop( receive_path_t* pThis ) {
 return_value_t receive_path_process_chunk( receive_path_t* pThis ) {
 	receive_path_t receive_path = *pThis;
 
-	chunk_t* dataChunk;
-	bufferPool_acquire( receive_path.pBufferPool, &dataChunk );
-	if ( Wc_Receive(receive_path.pCommunicator, dataChunk ) ) {
+	chunk_t* pDataChunk;
+	bufferPool_acquire( receive_path.pBufferPool, &pDataChunk );
+	if ( Wc_Receive(receive_path.pCommunicator, pDataChunk ) ) {
 		return NO_DATA_AVAILABLE;
 	} else {
-		chunk_t* audioChunk;
-		bufferPool_acquire( receive_path.pBufferPool, &audioChunk );
-		//decode chunk first then push to audio tx
-		bufferPool_release( receive_path.pBufferPool, &dataChunk );
-		audioTx_put( &receive_path.audio_tx, audioChunk);
+		chunk_t* pAudioChunk;
+		bufferPool_acquire( receive_path.pBufferPool, &pAudioChunk );
+		decoder_decode( receive_path.decoder, pDataChunk, pAudioChunk );
+		bufferPool_release( receive_path.pBufferPool, &pDataChunk );
+		audioTx_put( &receive_path.audio_tx, pAudioChunk);
 	}
 
 	return PASS;

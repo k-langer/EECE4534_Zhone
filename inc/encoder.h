@@ -13,7 +13,7 @@
 
 typedef struct encoder {
     int nbBytes; 
-    SpeexBits bits;     
+    SpeexBits bits;
     void* status; 
     float * input;   
     int outputSize;

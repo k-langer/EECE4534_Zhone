@@ -21,6 +21,7 @@
 #include "queue.h"
 #include "bufferPool.h"
 #include "isrDisp.h"
+#include "commonTypes.h"
 
 /***************************************************
             DEFINES
@@ -120,4 +121,11 @@ int audioRx_get(audioRx_t *pThis, chunk_t *pChunk);
  * Negative value on failure.
  */
 int audioRx_getNbNc(audioRx_t *pThis, chunk_t **pChunk);
+
+/** audio rx stop
+ *
+ *
+ */
+return_value_t audioRx_stop( audioRx_t *pThis );
+
 #endif
