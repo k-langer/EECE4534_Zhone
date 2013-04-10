@@ -22,8 +22,6 @@ typedef struct {
 
     isrDisp_t* pIsrDisp;
     bufferPool_t* pBufferPool;
-    queue_t encoder_input_queue;
-    queue_t xbee_tx_input_queue;
 } transfer_path_t;
 
 /***
