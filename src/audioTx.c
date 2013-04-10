@@ -159,8 +159,6 @@ void audioTx_isr(void *pThisArg)
 int audioTx_put(audioTx_t *pThis, chunk_t *pChunk)
 {
 //    chunk_t                  *pchunk_temp         = NULL;
-    int                         count                   = 0;
-    
     if ( NULL == pThis || NULL == pChunk ) {
         printf("[TX]: Failed to put\r\n");
         return FAIL;
@@ -192,5 +190,11 @@ int audioTx_put(audioTx_t *pThis, chunk_t *pChunk)
     }
     
     return PASS;
+}
+
+return_value_t audioTx_stop( audioTx_t *pThis ) {
+	DISABLE_DMA(*pDMA4_CONFIG);
+
+	return PASS;
 }
 
