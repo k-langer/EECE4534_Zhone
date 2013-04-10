@@ -7,14 +7,13 @@
  * Target:   TLL6537v1-1      
  * Compiler: VDSP++     Output format: VDSP++ "*.dxe"
  *
- * @author    Rohan Kangralkar
- * @date 	03/15/2009
+ * @author:    Rohan Kangralkar
+ * @date 03/15/2009
  *
  * LastChange:
- * $Id: audioTx.h 7 2013-03-29 03:06:06Z ovaskevi $
+ * $Id: audioTx.h 812 2013-03-12 02:28:57Z ovaskevi $
  *
  *******************************************************************************/
-
 #ifndef _AUDIO_TX_H_
 #define _AUDIO_TX_H_
 
@@ -29,7 +28,7 @@
  * @def AUDIOTX_QUEUE_DEPTH
  * @brief tx queue depth
  */
-#define AUDIOTX_QUEUE_DEPTH  (7)
+#define AUDIOTX_QUEUE_DEPTH 7
 
 /***************************************************
             DATA TYPES
@@ -38,9 +37,9 @@
 /** audio RX object
  */
 typedef struct {
-  queue_t          queue;  /* queue for received buffers */
-  chunk_t          *pPending; /* pointer to pending chunk just in receiving */
-  bufferPool_t     *pBuffP; /* pointer to buffer pool */
+  queue_t       queue;  /* queue for received buffers */
+  chunk_t       *pPending; /* pointer to pending chunk just in receiving */
+  bufferPool_t  *pBuffP; /* pointer to buffer pool */
   int              running; /* DMA is Running */
 } audioTx_t;
 
