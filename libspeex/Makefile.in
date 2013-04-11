@@ -19,7 +19,7 @@
 
 
 
-SOURCES = $(libspeex_la_SOURCES) $(libspeexdsp_la_SOURCES) $(testdenoise_SOURCES) $(testecho_SOURCES) $(testenc_SOURCES) $(testenc_uwb_SOURCES) $(testenc_wb_SOURCES) $(testjitter_SOURCES)
+SOURCES = $(libspeex_la_SOURCES) $(libspeexdsp_la_SOURCES) $(testdenoise_SOURCES) $(testecho_SOURCES) $(testenc_SOURCES) $(testenc_uwb_SOURCES) $(testenc_wb_SOURCES)
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -43,8 +43,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 host_triplet = @host@
 noinst_PROGRAMS = testenc$(EXEEXT) testenc_wb$(EXEEXT) \
-	testenc_uwb$(EXEEXT) testdenoise$(EXEEXT) testecho$(EXEEXT) \
-	testjitter$(EXEEXT)
+	testenc_uwb$(EXEEXT) testdenoise$(EXEEXT) testecho$(EXEEXT)
 subdir = libspeex
 DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
@@ -70,13 +69,9 @@ am_libspeex_la_OBJECTS = cb_search.lo exc_10_32_table.lo \
 	speex_callbacks.lo speex_header.lo window.lo
 libspeex_la_OBJECTS = $(am_libspeex_la_OBJECTS)
 libspeexdsp_la_LIBADD =
-am__libspeexdsp_la_SOURCES_DIST = preprocess.c jitter.c mdf.c \
-	fftwrap.c filterbank.c resample.c buffer.c scal.c smallft.c \
-	kiss_fft.c _kiss_fft_guts.h kiss_fft.h kiss_fftr.c kiss_fftr.h
-@BUILD_KISS_FFT_FALSE@@BUILD_SMALLFT_TRUE@am__objects_1 = smallft.lo
-@BUILD_KISS_FFT_TRUE@am__objects_1 = kiss_fft.lo kiss_fftr.lo
-am_libspeexdsp_la_OBJECTS = preprocess.lo jitter.lo mdf.lo fftwrap.lo \
-	filterbank.lo resample.lo buffer.lo scal.lo $(am__objects_1)
+am_libspeexdsp_la_OBJECTS = preprocess.lo smallft.lo jitter.lo mdf.lo \
+	fftwrap.lo kiss_fft.lo kiss_fftr.lo filterbank.lo resample.lo \
+	buffer.lo
 libspeexdsp_la_OBJECTS = $(am_libspeexdsp_la_OBJECTS)
 PROGRAMS = $(noinst_PROGRAMS)
 am_testdenoise_OBJECTS = testdenoise.$(OBJEXT)
@@ -94,9 +89,6 @@ testenc_uwb_DEPENDENCIES = libspeex.la
 am_testenc_wb_OBJECTS = testenc_wb.$(OBJEXT)
 testenc_wb_OBJECTS = $(am_testenc_wb_OBJECTS)
 testenc_wb_DEPENDENCIES = libspeex.la
-am_testjitter_OBJECTS = testjitter.$(OBJEXT)
-testjitter_OBJECTS = $(am_testjitter_OBJECTS)
-testjitter_DEPENDENCIES = libspeexdsp.la
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -121,15 +113,14 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/modes.Plo ./$(DEPDIR)/modes_wb.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/nb_celp.Plo ./$(DEPDIR)/preprocess.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/quant_lsp.Plo ./$(DEPDIR)/resample.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/sb_celp.Plo ./$(DEPDIR)/scal.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/smallft.Plo ./$(DEPDIR)/speex.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/sb_celp.Plo ./$(DEPDIR)/smallft.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/speex.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/speex_callbacks.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/speex_header.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/stereo.Plo ./$(DEPDIR)/testdenoise.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/testecho.Po ./$(DEPDIR)/testenc.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/testenc_uwb.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/testenc_wb.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/testjitter.Po ./$(DEPDIR)/vbr.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/testenc_wb.Po ./$(DEPDIR)/vbr.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/vq.Plo ./$(DEPDIR)/window.Plo
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -141,12 +132,10 @@ LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(libspeex_la_SOURCES) $(libspeexdsp_la_SOURCES) \
 	$(testdenoise_SOURCES) $(testecho_SOURCES) $(testenc_SOURCES) \
-	$(testenc_uwb_SOURCES) $(testenc_wb_SOURCES) \
-	$(testjitter_SOURCES)
-DIST_SOURCES = $(libspeex_la_SOURCES) \
-	$(am__libspeexdsp_la_SOURCES_DIST) $(testdenoise_SOURCES) \
-	$(testecho_SOURCES) $(testenc_SOURCES) $(testenc_uwb_SOURCES) \
-	$(testenc_wb_SOURCES) $(testjitter_SOURCES)
+	$(testenc_uwb_SOURCES) $(testenc_wb_SOURCES)
+DIST_SOURCES = $(libspeex_la_SOURCES) $(libspeexdsp_la_SOURCES) \
+	$(testdenoise_SOURCES) $(testecho_SOURCES) $(testenc_SOURCES) \
+	$(testenc_uwb_SOURCES) $(testenc_wb_SOURCES)
 HEADERS = $(noinst_HEADERS)
 ETAGS = etags
 CTAGS = ctags
@@ -161,10 +150,6 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
-BUILD_KISS_FFT_FALSE = @BUILD_KISS_FFT_FALSE@
-BUILD_KISS_FFT_TRUE = @BUILD_KISS_FFT_TRUE@
-BUILD_SMALLFT_FALSE = @BUILD_SMALLFT_FALSE@
-BUILD_SMALLFT_TRUE = @BUILD_SMALLFT_TRUE@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
@@ -178,7 +163,6 @@ CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
-DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -187,9 +171,6 @@ EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 F77 = @F77@
 FFLAGS = @FFLAGS@
-FFT_CFLAGS = @FFT_CFLAGS@
-FFT_LIBS = @FFT_LIBS@
-FFT_PKGCONFIG = @FFT_PKGCONFIG@
 GREP = @GREP@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -205,7 +186,6 @@ MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
-NMEDIT = @NMEDIT@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 OGG_CFLAGS = @OGG_CFLAGS@
@@ -217,7 +197,6 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
-PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
@@ -277,7 +256,7 @@ src = @src@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 EXTRA_DIST = echo_diagnostic.m
-INCLUDES = -I$(top_srcdir)/include -I$(top_builddir)/include -I$(top_builddir) @OGG_CFLAGS@ @FFT_CFLAGS@
+INCLUDES = -I$(top_srcdir)/include -I$(top_builddir)/include -I$(top_builddir) @OGG_CFLAGS@
 lib_LTLIBRARIES = libspeex.la libspeexdsp.la
 
 # Sources for compilation in the library
@@ -288,32 +267,30 @@ libspeex_la_SOURCES = cb_search.c 	exc_10_32_table.c 	exc_8_128_table.c \
 	lpc.c lsp_tables_nb.c modes.c modes_wb.c nb_celp.c quant_lsp.c sb_celp.c \
 	speex_callbacks.c speex_header.c window.c
 
-@BUILD_KISS_FFT_FALSE@@BUILD_SMALLFT_FALSE@FFTSRC = 
-@BUILD_KISS_FFT_FALSE@@BUILD_SMALLFT_TRUE@FFTSRC = smallft.c
-@BUILD_KISS_FFT_TRUE@FFTSRC = kiss_fft.c _kiss_fft_guts.h kiss_fft.h kiss_fftr.c kiss_fftr.h 
-libspeexdsp_la_SOURCES = preprocess.c jitter.c mdf.c fftwrap.c filterbank.c resample.c buffer.c scal.c $(FFTSRC)
+libspeexdsp_la_SOURCES = preprocess.c 	smallft.c \
+				jitter.c 	mdf.c fftwrap.c kiss_fft.c _kiss_fft_guts.h kiss_fft.h \
+	kiss_fftr.c kiss_fftr.h filterbank.c resample.c buffer.c
+
 noinst_HEADERS = arch.h 	cb_search_arm4.h 	cb_search_bfin.h 	cb_search_sse.h \
 		filters.h 	filters_arm4.h 	filters_bfin.h 	filters_sse.h 	fixed_arm4.h \
 		fixed_arm5e.h 	fixed_bfin.h 	fixed_debug.h 	lpc.h 	lpc_bfin.h 	ltp.h 	ltp_arm4.h \
 		ltp_sse.h 	math_approx.h 		misc_bfin.h 	nb_celp.h 	quant_lsp.h 	sb_celp.h \
 		stack_alloc.h 	vbr.h 	vq.h 	vq_arm4.h 	vq_bfin.h 	vq_sse.h cb_search.h fftwrap.h \
 	filterbank.h fixed_generic.h lsp.h lsp_bfin.h ltp_bfin.h modes.h os_support.h \
-	pseudofloat.h quant_lsp_bfin.h smallft.h vorbis_psy.h resample_sse.h
+	pseudofloat.h quant_lsp_bfin.h smallft.h vorbis_psy.h
 
 libspeex_la_LDFLAGS = -no-undefined -version-info @SPEEX_LT_CURRENT@:@SPEEX_LT_REVISION@:@SPEEX_LT_AGE@
 libspeexdsp_la_LDFLAGS = -no-undefined -version-info @SPEEX_LT_CURRENT@:@SPEEX_LT_REVISION@:@SPEEX_LT_AGE@
 testenc_SOURCES = testenc.c
 testenc_LDADD = libspeex.la
 testenc_wb_SOURCES = testenc_wb.c
-testenc_wb_LDADD = libspeex.la 
+testenc_wb_LDADD = libspeex.la
 testenc_uwb_SOURCES = testenc_uwb.c
 testenc_uwb_LDADD = libspeex.la
 testdenoise_SOURCES = testdenoise.c
-testdenoise_LDADD = libspeexdsp.la @FFT_LIBS@
+testdenoise_LDADD = libspeexdsp.la
 testecho_SOURCES = testecho.c
-testecho_LDADD = libspeexdsp.la @FFT_LIBS@
-testjitter_SOURCES = testjitter.c
-testjitter_LDADD = libspeexdsp.la @FFT_LIBS@
+testecho_LDADD = libspeexdsp.la
 all: all-am
 
 .SUFFIXES:
@@ -400,9 +377,6 @@ testenc_uwb$(EXEEXT): $(testenc_uwb_OBJECTS) $(testenc_uwb_DEPENDENCIES)
 testenc_wb$(EXEEXT): $(testenc_wb_OBJECTS) $(testenc_wb_DEPENDENCIES) 
 	@rm -f testenc_wb$(EXEEXT)
 	$(LINK) $(testenc_wb_LDFLAGS) $(testenc_wb_OBJECTS) $(testenc_wb_LDADD) $(LIBS)
-testjitter$(EXEEXT): $(testjitter_OBJECTS) $(testjitter_DEPENDENCIES) 
-	@rm -f testjitter$(EXEEXT)
-	$(LINK) $(testjitter_LDFLAGS) $(testjitter_OBJECTS) $(testjitter_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -442,7 +416,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/quant_lsp.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/resample.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sb_celp.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/scal.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smallft.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/speex.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/speex_callbacks.Plo@am__quote@
@@ -453,7 +426,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testenc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testenc_uwb.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testenc_wb.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testjitter.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vbr.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vq.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/window.Plo@am__quote@

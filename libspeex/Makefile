@@ -19,7 +19,7 @@
 
 
 
-SOURCES = $(libspeex_la_SOURCES) $(libspeexdsp_la_SOURCES) $(testdenoise_SOURCES) $(testecho_SOURCES) $(testenc_SOURCES) $(testenc_uwb_SOURCES) $(testenc_wb_SOURCES) $(testjitter_SOURCES)
+SOURCES = $(libspeex_la_SOURCES) $(libspeexdsp_la_SOURCES) $(testdenoise_SOURCES) $(testecho_SOURCES) $(testenc_SOURCES) $(testenc_uwb_SOURCES) $(testenc_wb_SOURCES)
 
 srcdir = .
 top_srcdir = ..
@@ -41,10 +41,9 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-host_triplet = x86_64-unknown-linux-gnu
+host_triplet = bfin-unknown-uclinux
 noinst_PROGRAMS = testenc$(EXEEXT) testenc_wb$(EXEEXT) \
-	testenc_uwb$(EXEEXT) testdenoise$(EXEEXT) testecho$(EXEEXT) \
-	testjitter$(EXEEXT)
+	testenc_uwb$(EXEEXT) testdenoise$(EXEEXT) testecho$(EXEEXT)
 subdir = libspeex
 DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
@@ -70,13 +69,9 @@ am_libspeex_la_OBJECTS = cb_search.lo exc_10_32_table.lo \
 	speex_callbacks.lo speex_header.lo window.lo
 libspeex_la_OBJECTS = $(am_libspeex_la_OBJECTS)
 libspeexdsp_la_LIBADD =
-am__libspeexdsp_la_SOURCES_DIST = preprocess.c jitter.c mdf.c \
-	fftwrap.c filterbank.c resample.c buffer.c scal.c smallft.c \
-	kiss_fft.c _kiss_fft_guts.h kiss_fft.h kiss_fftr.c kiss_fftr.h
-am__objects_1 = smallft.lo
-#am__objects_1 = kiss_fft.lo kiss_fftr.lo
-am_libspeexdsp_la_OBJECTS = preprocess.lo jitter.lo mdf.lo fftwrap.lo \
-	filterbank.lo resample.lo buffer.lo scal.lo $(am__objects_1)
+am_libspeexdsp_la_OBJECTS = preprocess.lo smallft.lo jitter.lo mdf.lo \
+	fftwrap.lo kiss_fft.lo kiss_fftr.lo filterbank.lo resample.lo \
+	buffer.lo
 libspeexdsp_la_OBJECTS = $(am_libspeexdsp_la_OBJECTS)
 PROGRAMS = $(noinst_PROGRAMS)
 am_testdenoise_OBJECTS = testdenoise.$(OBJEXT)
@@ -94,9 +89,6 @@ testenc_uwb_DEPENDENCIES = libspeex.la
 am_testenc_wb_OBJECTS = testenc_wb.$(OBJEXT)
 testenc_wb_OBJECTS = $(am_testenc_wb_OBJECTS)
 testenc_wb_DEPENDENCIES = libspeex.la
-am_testjitter_OBJECTS = testjitter.$(OBJEXT)
-testjitter_OBJECTS = $(am_testjitter_OBJECTS)
-testjitter_DEPENDENCIES = libspeexdsp.la
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -121,15 +113,14 @@ DEP_FILES = ./$(DEPDIR)/bits.Plo ./$(DEPDIR)/buffer.Plo \
 	./$(DEPDIR)/modes.Plo ./$(DEPDIR)/modes_wb.Plo \
 	./$(DEPDIR)/nb_celp.Plo ./$(DEPDIR)/preprocess.Plo \
 	./$(DEPDIR)/quant_lsp.Plo ./$(DEPDIR)/resample.Plo \
-	./$(DEPDIR)/sb_celp.Plo ./$(DEPDIR)/scal.Plo \
-	./$(DEPDIR)/smallft.Plo ./$(DEPDIR)/speex.Plo \
+	./$(DEPDIR)/sb_celp.Plo ./$(DEPDIR)/smallft.Plo \
+	./$(DEPDIR)/speex.Plo \
 	./$(DEPDIR)/speex_callbacks.Plo \
 	./$(DEPDIR)/speex_header.Plo \
 	./$(DEPDIR)/stereo.Plo ./$(DEPDIR)/testdenoise.Po \
 	./$(DEPDIR)/testecho.Po ./$(DEPDIR)/testenc.Po \
 	./$(DEPDIR)/testenc_uwb.Po \
-	./$(DEPDIR)/testenc_wb.Po \
-	./$(DEPDIR)/testjitter.Po ./$(DEPDIR)/vbr.Plo \
+	./$(DEPDIR)/testenc_wb.Po ./$(DEPDIR)/vbr.Plo \
 	./$(DEPDIR)/vq.Plo ./$(DEPDIR)/window.Plo
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -141,56 +132,46 @@ LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(libspeex_la_SOURCES) $(libspeexdsp_la_SOURCES) \
 	$(testdenoise_SOURCES) $(testecho_SOURCES) $(testenc_SOURCES) \
-	$(testenc_uwb_SOURCES) $(testenc_wb_SOURCES) \
-	$(testjitter_SOURCES)
-DIST_SOURCES = $(libspeex_la_SOURCES) \
-	$(am__libspeexdsp_la_SOURCES_DIST) $(testdenoise_SOURCES) \
-	$(testecho_SOURCES) $(testenc_SOURCES) $(testenc_uwb_SOURCES) \
-	$(testenc_wb_SOURCES) $(testjitter_SOURCES)
+	$(testenc_uwb_SOURCES) $(testenc_wb_SOURCES)
+DIST_SOURCES = $(libspeex_la_SOURCES) $(libspeexdsp_la_SOURCES) \
+	$(testdenoise_SOURCES) $(testecho_SOURCES) $(testenc_SOURCES) \
+	$(testenc_uwb_SOURCES) $(testenc_wb_SOURCES)
 HEADERS = $(noinst_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
-ACLOCAL = ${SHELL} /home/kevin/speex/speex-1.2rc1/missing --run aclocal-1.8
+ACLOCAL = ${SHELL} /home/pal/speex-1.2beta3/missing --run aclocal-1.8
 AMDEP_FALSE = #
 AMDEP_TRUE = 
-AMTAR = ${SHELL} /home/kevin/speex/speex-1.2rc1/missing --run tar
-AR = ar
+AMTAR = ${SHELL} /home/pal/speex-1.2beta3/missing --run tar
+AR = bfin-uclinux-ar
 AS = as
-AUTOCONF = ${SHELL} /home/kevin/speex/speex-1.2rc1/missing --run autoconf
-AUTOHEADER = ${SHELL} /home/kevin/speex/speex-1.2rc1/missing --run autoheader
-AUTOMAKE = ${SHELL} /home/kevin/speex/speex-1.2rc1/missing --run automake-1.8
+AUTOCONF = ${SHELL} /home/pal/speex-1.2beta3/missing --run autoconf
+AUTOHEADER = ${SHELL} /home/pal/speex-1.2beta3/missing --run autoheader
+AUTOMAKE = ${SHELL} /home/pal/speex-1.2beta3/missing --run automake-1.8
 AWK = gawk
-BUILD_KISS_FFT_FALSE = 
-BUILD_KISS_FFT_TRUE = #
-BUILD_SMALLFT_FALSE = #
-BUILD_SMALLFT_TRUE = 
-CC = gcc
+CC = bfin-uclinux-gcc
 CCDEPMODE = depmode=gcc3
-CFLAGS = -g -O2 -fvisibility=hidden -O3 -msse
-CPP = gcc -E
+CFLAGS = -g -O2
+CPP = bfin-uclinux-gcc -E
 CPPFLAGS = 
-CXX = g++
-CXXCPP = g++ -E
+CXX = bfin-uclinux-g++
+CXXCPP = bfin-uclinux-g++ -E
 CXXDEPMODE = depmode=gcc3
 CXXFLAGS = -g -O2
 CYGPATH_W = echo
 DEFS = -DHAVE_CONFIG_H
 DEPDIR = .deps
 DLLTOOL = dlltool
-DSYMUTIL = 
 ECHO = echo
 ECHO_C = 
 ECHO_N = -n
 ECHO_T = 
-EGREP = /bin/grep -E
+EGREP = /usr/bin/grep -E
 EXEEXT = 
-F77 = 
-FFLAGS = 
-FFT_CFLAGS = 
-FFT_LIBS = 
-FFT_PKGCONFIG = 
-GREP = /bin/grep
+F77 = bfin-uclinux-gfortran
+FFLAGS = -g -O2
+GREP = /usr/bin/grep
 INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_PROGRAM = ${INSTALL}
 INSTALL_SCRIPT = ${INSTALL}
@@ -204,8 +185,7 @@ LTLIBOBJS =
 MAINT = #
 MAINTAINER_MODE_FALSE = 
 MAINTAINER_MODE_TRUE = #
-MAKEINFO = ${SHELL} /home/kevin/speex/speex-1.2rc1/missing --run makeinfo
-NMEDIT = 
+MAKEINFO = ${SHELL} /home/pal/speex-1.2beta3/missing --run makeinfo
 OBJDUMP = objdump
 OBJEXT = o
 OGG_CFLAGS = 
@@ -217,21 +197,20 @@ PACKAGE_STRING =
 PACKAGE_TARNAME = 
 PACKAGE_VERSION = 
 PATH_SEPARATOR = :
-PKG_CONFIG = /usr/bin/pkg-config
-RANLIB = ranlib
-SED = /bin/sed
+RANLIB = bfin-uclinux-ranlib
+SED = /usr/bin/sed
 SET_MAKE = 
-SHELL = /bin/bash
+SHELL = /bin/sh
 SIZE16 = short
 SIZE32 = int
-SPEEX_LT_AGE = 5
-SPEEX_LT_CURRENT = 6
+SPEEX_LT_AGE = 4
+SPEEX_LT_CURRENT = 5
 SPEEX_LT_REVISION = 0
-SPEEX_VERSION = 1.2rc1
-STRIP = strip
-VERSION = 1.2rc1
-ac_ct_CC = gcc
-ac_ct_CXX = g++
+SPEEX_VERSION = 1.2beta3
+STRIP = bfin-uclinux-strip
+VERSION = 1.2beta3
+ac_ct_CC = 
+ac_ct_CXX = 
 ac_ct_F77 = 
 am__fastdepCC_FALSE = #
 am__fastdepCC_TRUE = 
@@ -241,25 +220,25 @@ am__include = include
 am__leading_dot = .
 am__quote = 
 bindir = ${exec_prefix}/bin
-build = x86_64-unknown-linux-gnu
+build = i686-pc-linux-gnu
 build_alias = 
-build_cpu = x86_64
+build_cpu = i686
 build_os = linux-gnu
-build_vendor = unknown
+build_vendor = pc
 datadir = ${datarootdir}
 datarootdir = ${prefix}/share
 docdir = ${datarootdir}/doc/${PACKAGE}
 dvidir = ${docdir}
 exec_prefix = ${prefix}
-host = x86_64-unknown-linux-gnu
-host_alias = 
-host_cpu = x86_64
-host_os = linux-gnu
+host = bfin-unknown-uclinux
+host_alias = bfin-uclinux
+host_cpu = bfin
+host_os = uclinux
 host_vendor = unknown
 htmldir = ${docdir}
 includedir = ${prefix}/include
 infodir = ${datarootdir}/info
-install_sh = /home/kevin/speex/speex-1.2rc1/install-sh
+install_sh = /home/pal/speex-1.2beta3/install-sh
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
 localedir = ${datarootdir}/locale
@@ -277,7 +256,7 @@ src = src
 sysconfdir = ${prefix}/etc
 target_alias = 
 EXTRA_DIST = echo_diagnostic.m
-INCLUDES = -I$(top_srcdir)/include -I$(top_builddir)/include -I$(top_builddir)  
+INCLUDES = -I$(top_srcdir)/include -I$(top_builddir)/include -I$(top_builddir) 
 lib_LTLIBRARIES = libspeex.la libspeexdsp.la
 
 # Sources for compilation in the library
@@ -288,32 +267,30 @@ libspeex_la_SOURCES = cb_search.c 	exc_10_32_table.c 	exc_8_128_table.c \
 	lpc.c lsp_tables_nb.c modes.c modes_wb.c nb_celp.c quant_lsp.c sb_celp.c \
 	speex_callbacks.c speex_header.c window.c
 
-#FFTSRC = 
-FFTSRC = smallft.c
-#FFTSRC = kiss_fft.c _kiss_fft_guts.h kiss_fft.h kiss_fftr.c kiss_fftr.h 
-libspeexdsp_la_SOURCES = preprocess.c jitter.c mdf.c fftwrap.c filterbank.c resample.c buffer.c scal.c $(FFTSRC)
+libspeexdsp_la_SOURCES = preprocess.c 	smallft.c \
+				jitter.c 	mdf.c fftwrap.c kiss_fft.c _kiss_fft_guts.h kiss_fft.h \
+	kiss_fftr.c kiss_fftr.h filterbank.c resample.c buffer.c
+
 noinst_HEADERS = arch.h 	cb_search_arm4.h 	cb_search_bfin.h 	cb_search_sse.h \
 		filters.h 	filters_arm4.h 	filters_bfin.h 	filters_sse.h 	fixed_arm4.h \
 		fixed_arm5e.h 	fixed_bfin.h 	fixed_debug.h 	lpc.h 	lpc_bfin.h 	ltp.h 	ltp_arm4.h \
 		ltp_sse.h 	math_approx.h 		misc_bfin.h 	nb_celp.h 	quant_lsp.h 	sb_celp.h \
 		stack_alloc.h 	vbr.h 	vq.h 	vq_arm4.h 	vq_bfin.h 	vq_sse.h cb_search.h fftwrap.h \
 	filterbank.h fixed_generic.h lsp.h lsp_bfin.h ltp_bfin.h modes.h os_support.h \
-	pseudofloat.h quant_lsp_bfin.h smallft.h vorbis_psy.h resample_sse.h
+	pseudofloat.h quant_lsp_bfin.h smallft.h vorbis_psy.h
 
-libspeex_la_LDFLAGS = -no-undefined -version-info 6:0:5
-libspeexdsp_la_LDFLAGS = -no-undefined -version-info 6:0:5
+libspeex_la_LDFLAGS = -no-undefined -version-info 5:0:4
+libspeexdsp_la_LDFLAGS = -no-undefined -version-info 5:0:4
 testenc_SOURCES = testenc.c
 testenc_LDADD = libspeex.la
 testenc_wb_SOURCES = testenc_wb.c
-testenc_wb_LDADD = libspeex.la 
+testenc_wb_LDADD = libspeex.la
 testenc_uwb_SOURCES = testenc_uwb.c
 testenc_uwb_LDADD = libspeex.la
 testdenoise_SOURCES = testdenoise.c
-testdenoise_LDADD = libspeexdsp.la 
+testdenoise_LDADD = libspeexdsp.la
 testecho_SOURCES = testecho.c
-testecho_LDADD = libspeexdsp.la 
-testjitter_SOURCES = testjitter.c
-testjitter_LDADD = libspeexdsp.la 
+testecho_LDADD = libspeexdsp.la
 all: all-am
 
 .SUFFIXES:
@@ -400,9 +377,6 @@ testenc_uwb$(EXEEXT): $(testenc_uwb_OBJECTS) $(testenc_uwb_DEPENDENCIES)
 testenc_wb$(EXEEXT): $(testenc_wb_OBJECTS) $(testenc_wb_DEPENDENCIES) 
 	@rm -f testenc_wb$(EXEEXT)
 	$(LINK) $(testenc_wb_LDFLAGS) $(testenc_wb_OBJECTS) $(testenc_wb_LDADD) $(LIBS)
-testjitter$(EXEEXT): $(testjitter_OBJECTS) $(testjitter_DEPENDENCIES) 
-	@rm -f testjitter$(EXEEXT)
-	$(LINK) $(testjitter_LDFLAGS) $(testjitter_OBJECTS) $(testjitter_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -442,7 +416,6 @@ include ./$(DEPDIR)/preprocess.Plo
 include ./$(DEPDIR)/quant_lsp.Plo
 include ./$(DEPDIR)/resample.Plo
 include ./$(DEPDIR)/sb_celp.Plo
-include ./$(DEPDIR)/scal.Plo
 include ./$(DEPDIR)/smallft.Plo
 include ./$(DEPDIR)/speex.Plo
 include ./$(DEPDIR)/speex_callbacks.Plo
@@ -453,7 +426,6 @@ include ./$(DEPDIR)/testecho.Po
 include ./$(DEPDIR)/testenc.Po
 include ./$(DEPDIR)/testenc_uwb.Po
 include ./$(DEPDIR)/testenc_wb.Po
-include ./$(DEPDIR)/testjitter.Po
 include ./$(DEPDIR)/vbr.Plo
 include ./$(DEPDIR)/vq.Plo
 include ./$(DEPDIR)/window.Plo
