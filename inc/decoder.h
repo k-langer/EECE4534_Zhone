@@ -3,6 +3,8 @@
 
 #include "commonTypes.h"
 
+#define FRAME_SIZE 160
+
 typedef struct decoder {
     int nbBytes; 
     SpeexBits bits;     
