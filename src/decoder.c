@@ -20,16 +20,18 @@ int decoder_init(decoder_t* state, int nbBytes)
 
 int decoder_decode(decoder_t* pThis, chunk_t* pDataChunk, chunk_t* pAudioChunk)
 {
-    /*
     int i;
     int nbBytes = pThis->nbBytes;
-    for (i = 0; i < CHUNK_SIZE/FRAME_SIZE; i++) {
-        speex_bits_read_from(&(pThis->bits),(unsigned char*)pDataChunk->u16_buff[i*nbBytes],nbBy$
-        speex_decode(pThis->status,&(pThis->bits),pThis->output);  
+    int bytePos = 0;
+    //TODO figure out why this is needed! It is init in decoder_init but segfaults if not init here. 
+    speex_bits_init(&pThis->bits);
+    while (bytePos < pDataChunk->bytesUsed) {
+        speex_bits_read_from(&pThis->bits,(char*)pDataChunk->u08_buff+bytePos,nbBytes); 
+        speex_decode(pThis->status,&pThis->bits,pThis->output);  
+        for (i=0;i<FRAME_SIZE;i++) {
+            pAudioChunk->u16_buff[i] = pThis->output[i];
+        }
+        bytePos+=nbBytes;
     }
-    for (i=0;i<FRAME_SIZE;i++) {
-        pAudioChunk->u16_buff[i] = pThis->output[i];
-    }
-    */
-    return PASS;           
+    return PASS;              
 }
