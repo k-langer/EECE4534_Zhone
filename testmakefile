@@ -10,8 +10,10 @@ TARGET = uart-blackfin
 # -- Include Path
 INC_PATH = -Iinc
 
-OBJS = test/uart.o 
-	   #src/uartRx.o
+OBJS = test/uart.o \
+	   src/uartRx.o \
+	   src/uartTx.o \
+	   src/xbee.o
 
 # --- Libraries 	
 LIBS     = -ltll6527mC   
@@ -34,7 +36,3 @@ $(TARGET):$(OBJS)
 # pattern rule for compiling into object files
 .c.o:
 	$(CC)  $(INC_PATH) -g -c $(CFLAGS)  -o $@ $<  
-
-xbee-linux:
-	gcc inc/xbee.h src/xbee.c test/xbee_read.c -o xbee_read.out -Iinc/
-	gcc inc/xbee.h src/xbee.c test/xbee_write.c -o xbee_write.out -Iinc/

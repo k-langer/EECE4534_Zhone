@@ -29,7 +29,7 @@ int uartTx_init(uartTx_t *pThis, bufferPool_t *pBuffP, isrDisp_t *pIsrDisp)
 {	
     if ((pThis == NULL) || (pBuffP == NULL) || (pIsrDisp == NULL)) 
     {
-        printf("[UTX]: Failed init\n");
+        //printf("[UTX]: Failed init\n");
         return FAIL;
     }
     
@@ -40,7 +40,7 @@ int uartTx_init(uartTx_t *pThis, bufferPool_t *pBuffP, isrDisp_t *pIsrDisp)
     queue_init(&pThis->queue, UARTTX_QUEUE_DEPTH);   
 
 //    *pDMA11_CONFIG |= (0x0001 << 7);  //Enable the DMA interrupt
-    *pDMA11_CONFIG |= (DI_EN | SYNC);  //Enable the DMA interrupt
+    *pDMA11_CONFIG = 0x10A0;  //Enable the DMA interrupt
     
     //Register the interrupt handler
     isrDisp_registerCallback(pIsrDisp, ISR_DMA11_UART1_TX, uartTx_isr, pThis);
@@ -62,7 +62,7 @@ int uartTx_send(uartTx_t *pThis, chunk_t *pChunk)
 
     if (NULL == pThis || NULL == pChunk) 
     {
-        printf("[TX]: Failed to put\n");
+        //printf("[TX]: Failed to put\n");
         return FAIL;
     }
 
@@ -80,7 +80,7 @@ int uartTx_send(uartTx_t *pThis, chunk_t *pChunk)
 		/* DMA already running add chunk to queue */
 		if (PASS != queue_put(&pThis->queue, pChunk))
 		{
-			printf("[TX] Send, DMA RUNNING - FAIL PLACE IN QUEUE\n");
+			//printf("[TX] Send, DMA RUNNING - FAIL PLACE IN QUEUE\n");
 			// return chunk to pool if queue is full, effectivly dropping the chunk
 			bufferPool_release(pThis->pBuffP, pChunk);
 			return FAIL;
@@ -100,13 +100,13 @@ void uartTx_dmaConfig(chunk_t *pChunk)
 {
 	
     DISABLE_DMA(*pDMA11_CONFIG);
-    *pDMA11_START_ADDR   = &pChunk->u16_buff[0];
-    *pDMA11_X_COUNT      = pChunk->len;  // 8 bit data so we change the stride and count
+    *pDMA11_START_ADDR   = &pChunk->u08_buff;
+    *pDMA11_X_COUNT      = pChunk->bytesUsed;  // 8 bit data so we change the stride and count
     *pDMA11_X_MODIFY     = 1;
     ENABLE_DMA(*pDMA11_CONFIG);
+    *pUART1_IER |= ETBEI;
     // enable transmit ISR for UART -- doubles as flow control
     // see p25-18 HRM
-    *pUART1_IER |= ETBEI;
 }
 
 /*
@@ -151,11 +151,9 @@ void uartTx_isr(void *pThisArg)
 
                // config DMA either with new chunk (if there was one)
                uartTx_dmaConfig(pThis->pPending);
-
         }
         else
         {
-
         	// queue is empty nothing more to transmit.
         	uartTx_dmaStop();
 
@@ -163,8 +161,5 @@ void uartTx_isr(void *pThisArg)
         	// no need to clean the DMA it is on one shot mode anyway
         	pThis->running = 0; // indicate next call will be a fresh start
         }
-    } else {
-    	// unknown int source
-    	// printf("UTXISR: Unknown SRC\r\n");
     }
 }

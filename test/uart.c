@@ -6,9 +6,13 @@
 #include <extio.h>
 #include <tll6527_core_timer.h>
 #include "startup.h"
-//#include "uartRx.h"
+#include "uartRx.h"
+#include "uartTx.h"
+#include "xbee.h"
 
-//uartRx_t uartRx;
+xbee_t xbee;
+uartRx_t uartRx;
+uartTx_t uartTx;
 bufferPool_t bp;
 isrDisp_t isrDisp;
 chunk_t *chunk;
@@ -50,48 +54,87 @@ int main ( void )
         return FAIL;
     }
 
-    printf("UART1_LCR: %04x\n", *pUART1_LCR);
-
     int i = 0;
-    while (i++ < 750000);
 
-    //bf52x_uart_settings settings = {
-    //    .parenable = 0,
-    //    .parity = 0,
-    //    .rxtx_baud = BF52X_BAUD_RATE_9600
-    //};
+    bf52x_uart_settings settings = {
+        .parenable = 0,
+        .parity = 0,
+        .rxtx_baud = BF52X_BAUD_RATE_9600
+    };
 
-    //bf52x_uart_deinit();
-    //bf52x_uart_init(&settings); 
+    bf52x_uart_deinit();
+    bf52x_uart_init(&settings); 
+
+    status = uartRx_init(&uartRx, &bp, &isrDisp);
+    if ( PASS != status ) {
+        return FAIL;
+    }
+
+    status = uartTx_init(&uartTx, &bp, &isrDisp);
+    if ( PASS != status ) {
+        return FAIL;
+    }
+
+    status = uartRx_start(&uartRx);
+    if ( PASS != status ) {
+        return FAIL;
+    }
+
+    status = Xbee_Init(&xbee, &uartRx, &uartTx);
+    if ( PASS != status ) {
+        return FAIL;
+    }
+
     *pPORTF_FER |= 0xc000;
     *pPORTF_MUX &= ~0x0400;
     *pPORTF_MUX |= 0x0800;
-    //*pPORTF_FER = 0x0;
     *pPORTFIO_DIR |= 0x4000;
     *pPORTFIO_DIR &= ~(0x8000);
 
-    //fpga_outputToPortFEnable(0xff00);
+    chunk_t *new_chunk = NULL;
 
-    i = 0;
-    while (i++ < 750000);
+    while (1)
+    {
+        //bufferPool_acquire(&bp, &new_chunk);
 
-    //status = uartRx_init(&uartRx, &bp, &isrDisp);
-    //if ( PASS != status ) {
-    //    return FAIL;
-    //}
+        //unsigned char msg[] = { 0x48, 0x65, 0x6c, 0x6c, 0x6f };
+        //for (i = 0; i < 5; i++)
+        //{
+        //    new_chunk->u08_buff[i] = msg[i];
+        //}
 
-    //status = uartRx_start(&uartRx);
-    //if ( PASS != status ) {
-    //    return FAIL;
-    //}
+        //new_chunk->bytesUsed = 5;
+        //Xbee_SendTransmitMessage(&xbee, 2, new_chunk);
 
-    char data = 0;
-    while (1) {
-        bf52x_uart_receive(&data, 1);
-        asm("nop;");
+        bufferPool_acquire(&bp, &new_chunk);
+
+        Xbee_GetMessage(&xbee, new_chunk);
+        if (new_chunk->bytesUsed > 0)
+        {
+            xbee_message_t xb_m;
+            xbee_receive_message_t xb_rm;
+            Xbee_UnpackMessage(new_chunk->u08_buff, new_chunk->bytesUsed, &xb_m);
+            Xbee_UnpackReceiveMessage(&xb_m, &xb_rm);
+            asm("nop;");
+
+            bufferPool_release(&bp, new_chunk);
+            new_chunk = NULL;
+        }
+        i = 0;
+        while (i++ < 150000000);
     }
-
-    i = 0;
+    
+    //while (1)
+    //{
+    //    uartRx_get(&uartRx, new_chunk);
+    //    if (new_chunk->bytesUsed > 0)
+    //    {
+    //        asm("nop;");
+    //        bufferPool_release(&bp, new_chunk);
+    //        new_chunk = NULL;
+    //        bufferPool_acquire(&bp, &new_chunk);
+    //    }
+    //}
 
     return 0;
 }

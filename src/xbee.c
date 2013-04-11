@@ -16,15 +16,48 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <errno.h>
+#include "tll_common.h"
 #include "xbee.h"
+#include "chunk.h"
+#include "bufferPool.h"
+#include "queue.h"
+#include "uartRx.h"
+#include "uartTx.h"
 
-int xbee_fd = -1;
-
-void Xbee_Init( int fd )
+unsigned int Xbee_ParseHex( char *str )
 {
-    xbee_fd = fd;
+    unsigned int value = 0;
+
+    for(;; str++ )
+	{
+		switch( *str )
+		{
+			case '0': case '1': case '2': case '3': case '4':
+			case '5': case '6': case '7': case '8': case '9':
+				value = (value << 4) | (*str & 0xf);
+				break;
+			case 'A': case 'B': case 'C': case 'D': case 'E': case 'F':
+			case 'a': case 'b': case 'c': case 'd': case 'e': case 'f':
+				value = (value << 4) | (9 + (*str & 0xf));
+				break;
+			default:
+				return value;
+		}
+	}
+}
+
+void Xbee_Sleep( unsigned int time )
+{
+	unsigned int i = 0;
+	while (i++ < time * 1000000);
+}
+
+int Xbee_Init(xbee_t *pThis, uartRx_t *rx, uartTx_t *tx)
+{
+	pThis->rx = rx;
+	pThis->tx = tx;
+
+	return PASS;
 }
 
 /** Transmit message through the Xbee module
@@ -34,9 +67,9 @@ void Xbee_Init( int fd )
  *
  * @return Zero on success, positive otherwise
  */
-int Xbee_SendMessage( unsigned char *pMessage, unsigned char length )
+int Xbee_SendMessage( xbee_t *pThis, chunk_t *pChunk )
 {
-    if (length != write(xbee_fd, pMessage, length))
+    if (FAIL == uartTx_send(pThis->tx, pChunk))
     {
         return FAIL;
     }
@@ -50,25 +83,22 @@ int Xbee_SendMessage( unsigned char *pMessage, unsigned char length )
  *
  * @return Zero on success, positive otherwise
  */
-int Xbee_GetMessage( unsigned char *pMessage, unsigned char *pLength )
+int Xbee_GetMessage( xbee_t *pThis, chunk_t *pChunk )
 {
-    int length = 0;
-    int count = 0;
-    while (count < 3)
-    {
-        length = read(xbee_fd, pMessage, 120);
-        if (length <= 0)
-        {
-            count++;
-            usleep(33333);
-        }
-        else
-        {
-            break;
-        }
-    }
-    *pLength = length;
-    return (length > 0) ? PASS : FAIL;
+	if ( FAIL == uartRx_get(pThis->rx, pChunk))
+	{
+		return FAIL;
+	}
+    return PASS;
+}
+
+int Xbee_GetMessageNb( xbee_t *pThis, chunk_t *pChunk )
+{
+	if ( FAIL == uartRx_getNb(pThis->rx, pChunk))
+	{
+		return FAIL;
+	}
+    return PASS;
 }
 
 /** Pack an API Message
@@ -165,13 +195,17 @@ int Xbee_PrintMessage(xbee_message_t *pMsg)
  *
  * @return Zero on success, positive otherwise
  */
-int Xbee_SendTransmitMessage( unsigned short to, unsigned char *pData, unsigned char length )
+int Xbee_SendTransmitMessage( xbee_t *pThis, unsigned short to, chunk_t *pChunk )
 {
     xbee_transmit_message_t *transmit_msg = (xbee_transmit_message_t *)malloc(sizeof(xbee_transmit_message_t));
 
     transmit_msg->to = to;
-    memcpy(transmit_msg->pData, pData, length);
-    transmit_msg->length = length;
+	int i;
+	for (i = 0; i < pChunk->bytesUsed; i++)
+	{
+		transmit_msg->pData[i] = pChunk->u08_buff[i];
+	}
+    transmit_msg->length = pChunk->bytesUsed;
 
     unsigned char builtMsg[120] = {0};
     unsigned char builtLength = 0;
@@ -181,7 +215,13 @@ int Xbee_SendTransmitMessage( unsigned short to, unsigned char *pData, unsigned 
         return FAIL;
     }
 
-    if (FAIL == Xbee_SendMessage(builtMsg, builtLength))
+	for (i = 0; i < builtLength; i++)
+	{
+		pChunk->u08_buff[i] = builtMsg[i];
+	}
+	pChunk->bytesUsed = builtLength;
+
+    if (FAIL == Xbee_SendMessage(pThis, pChunk))
     {
         return FAIL;
     }
@@ -199,11 +239,15 @@ int Xbee_SendTransmitMessage( unsigned short to, unsigned char *pData, unsigned 
  */
 int Xbee_PackTransmitMessage( xbee_transmit_message_t *pTransmit_msg, unsigned char *pMsg, unsigned char *pLength)
 {
+	static unsigned char frame = 1;
+	if (frame == 0)
+		frame++;
+
     xbee_message_t *xbee_msg = (xbee_message_t *)malloc(sizeof(xbee_message_t));
     xbee_msg->length = 0;
 
-    xbee_msg->payload[xbee_msg->length++] = 0x01;
-    xbee_msg->payload[xbee_msg->length++] = 0x01;
+    xbee_msg->payload[xbee_msg->length++] = XBEE_TRANSMIT_API_BYTE;
+    xbee_msg->payload[xbee_msg->length++] = frame;
     xbee_msg->payload[xbee_msg->length++] = (pTransmit_msg->to >> 8);
     xbee_msg->payload[xbee_msg->length++] = (pTransmit_msg->to & 0xff);
     xbee_msg->payload[xbee_msg->length++] = 0x00;
@@ -237,6 +281,7 @@ int Xbee_UnpackReceiveMessage( xbee_message_t *pMsg, xbee_receive_message_t *pMe
     pMessage->from |= (pMsg->payload[parsed_length++] & 0x00ff);
     pMessage->signal_strength = pMsg->payload[parsed_length++];
     pMessage->options = pMsg->payload[parsed_length++];
+	pMessage->length = 0;
     while (parsed_length < pMsg->length)
     {
         pMessage->pData[pMessage->length++] = pMsg->payload[parsed_length++];
@@ -272,18 +317,26 @@ int Xbee_PrintReceiveMessage( xbee_receive_message_t *pMsg )
  *
  * @return Zero on success, positive otherwise 
  */
-int Xbee_StartCommandMode( unsigned short apiMode )
+int Xbee_StartCommandMode( xbee_t *pThis, unsigned short guardTime )
 {
-    sleep(apiMode);
-    Xbee_SendMessage((unsigned char *)"+++", 3);
-    sleep(apiMode);
-    sleep(10);
-    unsigned char msg[100] = {0};
-    unsigned char length = 0;
+	chunk_t *command_chunk;
+	bufferPool_acquire(pThis->bp, &command_chunk);
+	unsigned char msg[] = { '+', '+', '+' };
+	int i;
+	for (i = 0; i < 3; i++)
+	{
+		command_chunk->u08_buff[i] = msg[i];
+	}
+	command_chunk->bytesUsed = 3;
 
-    if (PASS == Xbee_GetMessage(msg, &length))
+    Xbee_Sleep(guardTime);
+    Xbee_SendMessage(pThis, command_chunk);
+    Xbee_Sleep(guardTime);
+
+	bufferPool_acquire(pThis->bp, &command_chunk);
+    if (PASS == Xbee_GetMessage(pThis, command_chunk))
     {
-        if (length == 3)
+        if (3 == command_chunk->bytesUsed)
         {
             return PASS;
         }
@@ -297,15 +350,23 @@ int Xbee_StartCommandMode( unsigned short apiMode )
  *
  * @return Zero on success
  */
-int Xbee_ExitCommandMode( void )
+int Xbee_ExitCommandMode( xbee_t *pThis )
 {
-    Xbee_SendMessage((unsigned char*)"ATCN\r", 5);
-    sleep(10);
-    unsigned char msg[100] = {0};
-    unsigned char length = 0;
-    if (PASS == Xbee_GetMessage(msg, &length))
+	chunk_t *command_chunk;
+	bufferPool_acquire(pThis->bp, &command_chunk);
+	unsigned char msg[] = { 'A', 'T', 'C', 'N', '\r' };
+	int i;
+	for (i = 0; i < 5; i++)
+	{
+		command_chunk->u08_buff[i] = msg[i];
+	}
+	command_chunk->bytesUsed = 5;
+    Xbee_SendMessage(pThis, command_chunk);
+
+	bufferPool_acquire(pThis->bp, &command_chunk);
+    if (PASS == Xbee_GetMessage(pThis, command_chunk))
     {
-        if (length == 3)
+        if (3 == command_chunk->bytesUsed)
         {
             return PASS;
         }
@@ -319,28 +380,28 @@ int Xbee_ExitCommandMode( void )
  *
  * @return Zero on success, positive otherwise
  */
-int Xbee_CommandModeGetAddress( unsigned short *pAddr )
+int Xbee_CommandModeGetAddress( xbee_t *pThis, unsigned short *pAddr )
 {
-    Xbee_SendMessage((unsigned char*)"ATMY\r", 5);
-    sleep(10);
-    unsigned char msg[100] = {0};
-    unsigned char length = 0;
-    if (PASS == Xbee_GetMessage(msg, &length))
-    {
-        if (length > 0)
-        {
-            *pAddr = 0;
-            unsigned char i;
-            for (i = 0; i < length; i++)
-            {
-                int power = 1;
-                unsigned char j;
-                for (j = 0; j < (length - 1 - j); j++)
-                    power *= 16;
+	chunk_t *command_chunk;
+	bufferPool_acquire(pThis->bp, &command_chunk);
+	unsigned char msg[] = { 'A', 'T', 'M', 'Y', '\r' };
+	int i;
+	for (i = 0; i < 5; i++)
+	{
+		command_chunk->u08_buff[i] = msg[i];
+	}
+	command_chunk->bytesUsed = 5;
+    Xbee_SendMessage(pThis, command_chunk);
 
-                *pAddr += msg[i] * power;
-            }
-            return PASS;
+	bufferPool_acquire(pThis->bp, &command_chunk);
+    if (PASS == Xbee_GetMessage(pThis, command_chunk))
+    {
+        if (0 < command_chunk->bytesUsed)
+        {
+			command_chunk->u08_buff[command_chunk->bytesUsed] = 0;
+			*pAddr = Xbee_ParseHex((char*)command_chunk->s08_buff);
+
+			return PASS;
         }
     }
     return FAIL;
@@ -352,19 +413,27 @@ int Xbee_CommandModeGetAddress( unsigned short *pAddr )
  *
  * @return Zero on success, positive otherwise
  */
-int Xbee_CommandModeSetAddress( unsigned short addr )
+int Xbee_CommandModeSetAddress( xbee_t *pThis, unsigned short addr )
 {
-    unsigned char tempStr[30] = "ATMY";
-    char addrStr[30] = {0};
+	chunk_t *command_chunk;
+	bufferPool_acquire(pThis->bp, &command_chunk);
+
+    char addrStr[4] = {0};
     sprintf((char*)addrStr, "%04x\r", addr);
-    strcat((char*)tempStr, addrStr);
-    Xbee_SendMessage(tempStr, 9);
-    sleep(10);
-    unsigned char msg[100] = {0};
-    unsigned char length = 0;
-    if (PASS == Xbee_GetMessage(msg, &length))
+
+    unsigned char msg[] = { 'A', 'T', 'M', 'Y', addrStr[0], addrStr[1], addrStr[2], addrStr[3], '\r' };
+	int i;
+	for (i = 0; i < 9; i++)
+	{
+		command_chunk->u08_buff[i] = msg[i];
+	}
+	command_chunk->bytesUsed = 9;
+    Xbee_SendMessage(pThis, command_chunk);
+
+	bufferPool_acquire(pThis->bp, &command_chunk);
+    if (PASS == Xbee_GetMessage(pThis, command_chunk))
     {
-        if (length == 3)
+        if (3 == command_chunk->bytesUsed)
         {
             return PASS;
         }
@@ -378,28 +447,28 @@ int Xbee_CommandModeSetAddress( unsigned short addr )
  *
  * @return Zero on sucess, positive otherwise
  */
-int Xbee_CommandModeGetApiMode( unsigned short *pApiMode )
+int Xbee_CommandModeGetApiMode( xbee_t *pThis, unsigned short *pApiMode )
 {
-    Xbee_SendMessage((unsigned char*)"ATAP\r", 5);
-    sleep(10);
-    unsigned char msg[100] = {0};
-    unsigned char length = 0;
-    if (PASS == Xbee_GetMessage(msg, &length))
-    {
-        if (length > 0)
-        {
-            *pApiMode = 0;
-            unsigned char i;
-            for (i = 0; i < length; i++)
-            {
-                int power = 1;
-                unsigned char j;
-                for (j = 0; j < (length - 1 - j); j++)
-                    power *= 16;
+	chunk_t *command_chunk;
+	bufferPool_acquire(pThis->bp, &command_chunk);
+	unsigned char msg[] = { 'A', 'T', 'A', 'P', '\r' };
+	int i;
+	for (i = 0; i < 5; i++)
+	{
+		command_chunk->u08_buff[i] = msg[i];
+	}
+	command_chunk->bytesUsed = 5;
+    Xbee_SendMessage(pThis, command_chunk);
 
-                *pApiMode += msg[i] * power;
-            }
-            return PASS;
+	bufferPool_acquire(pThis->bp, &command_chunk);
+    if (PASS == Xbee_GetMessage(pThis, command_chunk))
+    {
+        if (0 < command_chunk->bytesUsed)
+        {
+			command_chunk->u08_buff[command_chunk->bytesUsed] = 0;
+			*pApiMode = Xbee_ParseHex((char*)command_chunk->s08_buff);
+
+			return PASS;
         }
     }
     return FAIL;
@@ -411,19 +480,23 @@ int Xbee_CommandModeGetApiMode( unsigned short *pApiMode )
  *
  * @return Zero on sucess, positive otherwise
  */
-int Xbee_CommandModeSetApiMode ( unsigned short apiMode )
+int Xbee_CommandModeSetApiMode ( xbee_t *pThis, unsigned char apiMode )
 {
-    unsigned char tempStr[30] = "ATAP";
-    char apiModeStr[30] = {0};
-    sprintf((char*)apiModeStr, "%01x\r", apiMode);
-    strcat((char*)tempStr, apiModeStr);
-    Xbee_SendMessage(tempStr, 6);
-    sleep(10);
-    unsigned char msg[100] = {0};
-    unsigned char length = 0;
-    if (PASS == Xbee_GetMessage(msg, &length))
+	chunk_t *command_chunk;
+	bufferPool_acquire(pThis->bp, &command_chunk);
+    unsigned char msg[] = { 'A', 'T', 'A', 'P', apiMode + 0x30, '\r' };
+	int i;
+	for (i = 0; i < 6; i++)
+	{
+		command_chunk->u08_buff[i] = msg[i];
+	}
+	command_chunk->bytesUsed = 6;
+    Xbee_SendMessage(pThis, command_chunk);
+
+	bufferPool_acquire(pThis->bp, &command_chunk);
+    if (PASS == Xbee_GetMessage(pThis, command_chunk))
     {
-        if (length == 3)
+        if (3 == command_chunk->bytesUsed)
         {
             return PASS;
         }
