@@ -32,14 +32,13 @@ int encoder_init(encoder_t* state)
   encodes it, and fills the location of the 
   encoded chunk. Returns pass or fail. 
 */
-int encoder_encode( encoder_t* pThis, chunk_t* pAudioChunk, chunk_t* pDataChunk)
-{
+int encoder_encode( encoder_t* pThis, chunk_t* pAudioChunk, chunk_t* pDataChunk) {
     int i;
     int j;
     char* out = (char*)pDataChunk->u16_buff;
     for (i = 0; i < CHUNK_SIZE/FRAME_SIZE; i++) {
         for (j = 0; j < FRAME_SIZE; j++) {
-            pThis->input[j] = (float)pAudioChunk->s16_buff[j+i*pThis->nbBytes];
+            pThis->input[j] = (float)pAudioChunk->s16_buff[j+i*FRAME_SIZE];
         }   
         speex_bits_reset(&(pThis->bits));
         speex_encode(pThis->status, pThis->input, &(pThis->bits));
