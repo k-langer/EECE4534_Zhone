@@ -16,20 +16,25 @@
 #ifndef XBEE_H_
 #define XBEE_H_
 
-#ifndef PASS
-#define PASS 0
-#endif
-
-#ifndef FAIL
-#define FAIL 1
-#endif
+#include "chunk.h"
+#include "bufferPool.h"
+#include "queue.h"
+#include "uartRx.h"
+#include "uartTx.h"
 
 #define GUARD_TIME 1000
 
 #define XBEE_MAX_PAYLOAD_LENGTH 120
 #define XBEE_MAX_DATA_LENGTH 100
 
-#define XBEE_RECEIVE_API_BYTE 0x81
+#define XBEE_RECEIVE_API_BYTE  0x81
+#define XBEE_TRANSMIT_API_BYTE 0x01
+
+typedef struct {
+	uartRx_t *rx;
+	uartTx_t *tx;
+	bufferPool_t *bp;
+} xbee_t;
 
 typedef struct {
     unsigned char payload[XBEE_MAX_PAYLOAD_LENGTH];
@@ -51,7 +56,7 @@ typedef struct {
     unsigned char length;
 } xbee_receive_message_t;
 
-void Xbee_Init( int fd );
+int Xbee_Init(xbee_t *pThis, uartRx_t *rx, uartTx_t *tx);
 
 /** Transmit message through the Xbee module
  *
@@ -60,7 +65,7 @@ void Xbee_Init( int fd );
  *
  * @return Zero on success, positive otherwise
  */
-int Xbee_SendMessage( unsigned char *pMessage, unsigned char length );
+int Xbee_SendMessage( xbee_t *pThis, chunk_t *pChunk );
 
 /** Gets messages from the Xbee module
  *
@@ -69,7 +74,8 @@ int Xbee_SendMessage( unsigned char *pMessage, unsigned char length );
  *
  * @return Zero on success, positive otherwise
  */
-int Xbee_GetMessage( unsigned char *pMessage, unsigned char *pLength );
+int Xbee_GetMessage( xbee_t *pThis, chunk_t *pChunk );
+int Xbee_GetMessageNb( xbee_t *pThis, chunk_t *pChunk );
 
 /** Pack an API Message
  *
@@ -79,7 +85,7 @@ int Xbee_GetMessage( unsigned char *pMessage, unsigned char *pLength );
  *
  * @return Zero on success, positive otherwise
  */
-int Xbee_PackMessage( xbee_message_t *pXbee_msg, unsigned char *pMsg, unsigned char *pLength  );
+int Xbee_PackMessage( xbee_message_t *msg, unsigned char *pMsg, unsigned char *pLength );
 
 /** Unpacks a raw byte message
  * 
@@ -107,7 +113,7 @@ int Xbee_PrintMessage(xbee_message_t *pMsg);
  *
  * @return Zero on success, positive otherwise
  */
-int Xbee_SendTransmitMessage( unsigned short to, unsigned char *pData, unsigned char length );
+int Xbee_SendTransmitMessage( xbee_t *pThis, unsigned short to, chunk_t *pChunk );
 
 /** Pack Transmit Message
  * 
@@ -146,7 +152,7 @@ int Xbee_PrintReceiveMessage( xbee_receive_message_t *pMsg );
  *
  * @return Zero on success, positive otherwise 
  */
-int Xbee_StartCommandMode( unsigned short guardTime );
+int Xbee_StartCommandMode( xbee_t *pThis, unsigned short guardTime );
 
 /** Force exits command mode
  *  Only call if you know you're in command mode, otherwise message will be sent
@@ -154,7 +160,7 @@ int Xbee_StartCommandMode( unsigned short guardTime );
  *
  * @return Zero on success
  */
-int Xbee_ExitCommandMode( void );
+int Xbee_ExitCommandMode( xbee_t *pThis );
 
 /** Get the current address from the module
  *
@@ -162,7 +168,7 @@ int Xbee_ExitCommandMode( void );
  *
  * @return Zero on success, positive otherwise
  */
-int Xbee_CommandModeGetAddress( unsigned short *pAddr );
+int Xbee_CommandModeGetAddress( xbee_t *pThis, unsigned short *pAddr );
 
 /** Set the current address for the module
  *
@@ -170,15 +176,15 @@ int Xbee_CommandModeGetAddress( unsigned short *pAddr );
  *
  * @return Zero on success, positive otherwise
  */
-int Xbee_CommandModeSetAddress( unsigned short addr );
+int Xbee_CommandModeSetAddress( xbee_t *pThis, unsigned short addr );
 
 /** Gets if the module is in API mode or not
  *
- * @param pApiMode  Returns the level of API mode (0, 1 or 2)
+ * @param pApiMode  Returns the level of API mode (0, 1 or 2);
  *
  * @return Zero on sucess, positive otherwise
  */
-int Xbee_CommandModeGetApiMode( unsigned short *pApiMode );
+int Xbee_CommandModeGetApiMode( xbee_t *pThis, unsigned short *pApiMode );
 
 /** Sets the module to the given API Mode
  *
@@ -186,6 +192,6 @@ int Xbee_CommandModeGetApiMode( unsigned short *pApiMode );
  *
  * @return Zero on sucess, positive otherwise
  */
-int Xbee_CommandModeSetApiMode ( unsigned short apiMode );
+int Xbee_CommandModeSetApiMode ( xbee_t *pThis, unsigned char apiMode );
 
 #endif

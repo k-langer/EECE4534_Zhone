@@ -8,8 +8,7 @@
 #include <power_mode.h>
 
 
-//chunk_t sramPending __attribute__((section(".sram_app.data")));
-char sramPending[10] __attribute__((section(".sram_app.data")));
+char sramPending[120] __attribute__((section(".sram_app.data")));
 
 /** 
  * Configures the DMA rx with the buffer and the buffer length to 
@@ -23,14 +22,21 @@ void uartRx_dmaConfig(char* cPtr)
 {
 	DISABLE_DMA(*pDMA10_CONFIG);
 	*pDMA10_START_ADDR   = cPtr;
-	*pDMA10_X_COUNT      = 10; //pchunk->size;
+	*pDMA10_X_COUNT      = 5;
 	*pDMA10_X_MODIFY     = 1;
-	*pUART1_IER |= 0x1;
+	*pUART1_IER         |= 0x1;
 	ENABLE_DMA(*pDMA10_CONFIG);
 }
 
-
-
+void uartRx_dmaConfigFinish(char* cPtr, unsigned short length)
+{
+    DISABLE_DMA(*pDMA10_CONFIG);
+    *pDMA10_START_ADDR  = cPtr;
+    *pDMA10_X_COUNT     = length;
+    *pDMA10_X_MODIFY    = 1;
+    *pUART1_IER        |= 0x1;
+    ENABLE_DMA(*pDMA10_CONFIG);
+}
 
 /** Initialize audio rx
  *    - get pointer to buffer pool
@@ -49,7 +55,7 @@ int uartRx_init(uartRx_t *pThis, bufferPool_t *pBuffP,
                  isrDisp_t *pIsrDisp)
 {
     if ( NULL == pThis || NULL == pBuffP || NULL == pIsrDisp) {
-        printf("[UART_RX]: Failed init\r\n");
+        //printf("[UART_RX]: Failed init\r\n");
         return FAIL;
     }
     
@@ -63,16 +69,14 @@ int uartRx_init(uartRx_t *pThis, bufferPool_t *pBuffP,
      /* Read, 1-D, interrupt enabled, Memory write operation, 16 bit transfer,
       * Auto buffer
       */
-    *pDMA10_CONFIG = 0xA2; //SYNC | WNR | WDSIZE_8 | DI_EN;
+    *pDMA10_CONFIG = 0x10A2;//0xA2; //SYNC | WNR | WDSIZE_8 | DI_EN;
 
     /**
      * Register the interrupt handler
      */
     isrDisp_registerCallback(pIsrDisp, ISR_DMA10_UART1_RX, uartRx_isr, pThis);
-    
-    //chunk_init(&sramPending);
 
-    printf("[UART_RX]: RX init complete\r\n");
+    //printf("[UART_RX]: RX init complete\r\n");
     
     return PASS;
 }
@@ -94,11 +98,11 @@ int uartRx_init(uartRx_t *pThis, bufferPool_t *pBuffP,
 int uartRx_start(uartRx_t *pThis)
 {
 
-	printf("[UART RX]: uartRx_start: implemented\r\n");
+	//printf("[UART RX]: uartRx_start: implemented\r\n");
 
     /* prime the system by getting the first buffer filled */
      if ( FAIL == bufferPool_acquire(pThis->pBuffP, &pThis->pPending ) ) {
-         printf("[UART_RX]: Failed to acquire buffer\r\n");
+         //printf("[UART_RX]: Failed to acquire buffer\r\n");
          return FAIL;
      }
      
@@ -123,51 +127,102 @@ int uartRx_start(uartRx_t *pThis)
  */
 void uartRx_isr(void *pThisArg)
 {
-	printf("RX finished\r\n");
+	//printf("RX finished\r\n");
     // local pThis to avoid constant casting 
     uartRx_t *pThis  = (uartRx_t*) pThisArg;
     
 
     if ( *pDMA10_IRQ_STATUS & 0x1 ) {
 
-		int i;
-		for (i = 0; i < 10; i++) {
-//			printf("%c = 0x%X\r\n", sramPending[i], sramPending[i]);
-			pThis->pPending->s08_buff[i] = sramPending[i];
-		}
-		pThis->pPending->s08_buff[10] = '\r'; pThis->pPending->s08_buff[11] = '\n';
-
-    	//chunk_copy(&sramPending, pThis->pPending);
-    	//chunk_init(&sramPending);
-
-        // chunk is now filled update the length
-        pThis->pPending->bytesUsed = 12; //pThis->pPending->size;
-        
-        /* Insert the chunk previously read by the DMA RX on the
-            RX QUEUE and a data is inserted to queue
-         */
-        if ( FAIL == queue_put(&pThis->queue, pThis->pPending) ) {
-
-            // reuse the same buffer and overwrite last samples
-            //uartRx_dmaConfig(pThis->pPending);
-        	uartRx_dmaConfig(sramPending);
-
-            printf("[INT]: RX packet dropped\r\n");
-        } else {
-
-            if ( PASS == bufferPool_acquire(pThis->pBuffP, &pThis->pPending ) ) {
-                //uartRx_dmaConfig(pThis->pPending);
-            	uartRx_dmaConfig(sramPending);
-            } else {
-                printf("Buffer pool empty!\r\n");
+        if (pThis->state == UARTRX_WAITING)
+        {
+            int i;
+            for (i = 0; i < 5; i++) {
+                pThis->pPending->s08_buff[i] = sramPending[i];
             }
+
+            unsigned short packet_length = pThis->pPending->s08_buff[2] - 1;
+
+            if (0x7e == pThis->pPending->s08_buff[0] && 0 < packet_length)
+            {
+                pThis->state = UARTRX_COMPLETING;
+                uartRx_dmaConfigFinish(sramPending, packet_length);
+            }
+			else
+			{
+				pThis->pPending->bytesUsed = 5;
+				if ( FAIL == queue_put(&pThis->queue, pThis->pPending) ) {
+					// reuse the same buffer and overwrite last samples
+					//uartRx_dmaConfig(pThis->pPending);
+					uartRx_dmaConfig(sramPending);
+
+					//printf("[INT]: RX packet dropped\r\n");
+				} else {
+					if ( PASS == bufferPool_acquire(pThis->pBuffP, &pThis->pPending ) ) {
+						uartRx_dmaConfig(sramPending);
+					} else {
+						//printf("Buffer pool empty!\r\n");
+					}
+				}
+			}
         }
-        
+        else if (pThis->state == UARTRX_COMPLETING)
+        {
+            int i;
+            for (i = 0; i < pThis->pPending->s08_buff[2] - 1; i++) {
+                pThis->pPending->s08_buff[i+5] = sramPending[i];
+            }
+            
+            // chunk is now filled update the length
+            pThis->pPending->bytesUsed = pThis->pPending->s08_buff[2] + 4; //pThis->pPending->size;
+
+            /* Insert the chunk previously read by the DMA RX on the
+                RX QUEUE and a data is inserted to queue
+             */
+            if ( FAIL == queue_put(&pThis->queue, pThis->pPending) ) {
+                // reuse the same buffer and overwrite last samples
+                //uartRx_dmaConfig(pThis->pPending);
+                uartRx_dmaConfig(sramPending);
+
+                //printf("[INT]: RX packet dropped\r\n");
+            } else {
+                if ( PASS == bufferPool_acquire(pThis->pBuffP, &pThis->pPending ) ) {
+                    uartRx_dmaConfig(sramPending);
+                } else {
+                    //printf("Buffer pool empty!\r\n");
+                }
+            }
+
+            pThis->state = UARTRX_WAITING;
+        }
         *pDMA10_IRQ_STATUS  |= 0x0001;  // clear the interrupt
     }
 }
 
+int uartRx_getChunk(uartRx_t *pThis, chunk_t *pChunk)
+{
+    chunk_t *chunk_rx;
+    
+    queue_get(&pThis->queue, (void**)&chunk_rx);
 
+	unsigned int count;
+	unsigned int len = chunk_rx->bytesUsed;
+
+	// copy manuall since memcpy does not work currently
+	//
+	for (count = 0; len > count; count++) {
+		pChunk->u32_buff[count] = chunk_rx->u32_buff[count];
+	}
+	// update length of actual copied data
+	pChunk->bytesUsed = chunk_rx->bytesUsed;
+    
+    if ( FAIL == bufferPool_release(pThis->pBuffP, chunk_rx) ) {
+        return FAIL;
+    }
+    
+
+    return PASS;
+}
 
 /** audio rx get 
  *   copyies a filled chunk into pChunk
@@ -184,24 +239,29 @@ void uartRx_isr(void *pThisArg)
  */
 int uartRx_get(uartRx_t *pThis, chunk_t *pChunk)
 {
-    chunk_t *chunk_rx;
-    
     /* Block till a chunk arrives on the rx queue */
-    while( queue_is_empty(&pThis->queue) ) {
-    	printf("RX Queue is empty\r\n");
+    while( queue_is_empty(&pThis->queue) )
+	{
+    	//printf("RX Queue is empty\r\n");
 //		powerMode_change(PWR_ACTIVE);
         asm("idle;");
     }
     powerMode_change(PWR_FULL_ON);
-    
-    queue_get(&pThis->queue, (void**)&chunk_rx);
 
-    chunk_copy(chunk_rx, pChunk);
-    
-    if ( FAIL == bufferPool_release(pThis->pBuffP, chunk_rx) ) {
-        return FAIL;
-    }
-    
-
-    return PASS;
+	return uartRx_getChunk(pThis, pChunk);    
 }
+
+int uartRx_getNb(uartRx_t *pThis, chunk_t *pChunk)
+{
+    /* Block till a chunk arrives on the rx queue */
+    if( queue_is_empty(&pThis->queue) )
+	{
+    	//printf("RX Queue is empty\r\n");
+//		powerMode_change(PWR_ACTIVE);
+        //asm("idle;");
+		return FAIL;
+    }
+    //powerMode_change(PWR_FULL_ON);
+	return uartRx_getChunk(pThis, pChunk);    
+}
+

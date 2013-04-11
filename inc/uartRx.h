@@ -16,20 +16,26 @@
             DATA TYPES
 ***************************************************/
 
-/** audio RX object
+/** uart status enum
+ */
+typedef enum {
+    UARTRX_WAITING = 0,
+    UARTRX_COMPLETING
+} uart_state_t;
+
+/** uart RX object
  */
 typedef struct {
   queue_t        queue;  /* queue for received buffers */
   chunk_t        *pPending; /* pointer to pending chunk just in receiving */
   bufferPool_t   *pBuffP; /* pointer to buffer pool */
+  uart_state_t   state;
 } uartRx_t;
 
 
 /***************************************************
             Access Methods 
 ***************************************************/
-
-
 
 /** Initialize audio rx
  *    - get pointer to buffer pool
@@ -84,6 +90,8 @@ void uartRx_isr(void *pThisArg);
  * Negative value on failure.
  */
 int uartRx_get(uartRx_t *pThis, chunk_t *pChunk);
+
+int uartRx_getNb(uartRx_t *pThis, chunk_t *pChunk);
 
 
 #endif
