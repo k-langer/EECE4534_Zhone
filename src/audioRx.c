@@ -34,13 +34,15 @@
  *
  * @return void
  */
-void audioRx_dmaConfig(chunk_t *pchunk)
+void audioRx_dmaConfig( audioRx_t *pThis, chunk_t *pchunk)
 {
     DISABLE_DMA(*pDMA3_CONFIG);
-    *pDMA3_START_ADDR   = &pchunk->u16_buff[0];
-    *pDMA3_X_COUNT      = pchunk->bytesMax/2;  // 16 bit data so we change the stride and count
-    *pDMA3_X_MODIFY     = 2;
-    ENABLE_DMA(*pDMA3_CONFIG);
+    if ( pThis->running ) {
+		*pDMA3_START_ADDR   = &pchunk->u16_buff[0];
+		*pDMA3_X_COUNT      = pchunk->bytesMax/2;  // 16 bit data so we change the stride and count
+		*pDMA3_X_MODIFY     = 2;
+		ENABLE_DMA(*pDMA3_CONFIG);
+    }
 }
 
 
@@ -113,7 +115,8 @@ int audioRx_start(audioRx_t *pThis)
          return FAIL;
      }
      
-     audioRx_dmaConfig(pThis->pPending);    
+     pThis->running = 1;
+     audioRx_dmaConfig(pThis, pThis->pPending);
      
      // enable the audio transfer 
      ENABLE_SPORT0_RX();
@@ -147,13 +150,13 @@ void audioRx_isr(void *pThisArg)
         if ( FAIL == queue_put(&pThis->queue, pThis->pPending) ) {
             
             // reuse the same buffer and overwrite last samples 
-            audioRx_dmaConfig(pThis->pPending);
+            audioRx_dmaConfig(pThis, pThis->pPending);
             
             //printf("[INT]: RX packet dropped\n");
         } else {
             
             if ( PASS == bufferPool_acquire(pThis->pBuffP, &pThis->pPending ) ) {
-                audioRx_dmaConfig(pThis->pPending);
+                audioRx_dmaConfig(pThis, pThis->pPending);
             } else {
                 printf("Buffer pool empty!\n");
             }
@@ -223,8 +226,7 @@ int audioRx_getNbNc(audioRx_t *pThis, chunk_t **ppChunk)
 }
 
 int audioRx_stop( audioRx_t *pThis ) {
-	DISABLE_DMA(*pDMA3_CONFIG);
-	queue_init( &( pThis->queue ), AUDIORX_QUEUE_DEPTH );
+	pThis->running = 0;
 
 	return PASS;
 }
