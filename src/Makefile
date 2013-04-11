@@ -28,6 +28,8 @@ OBJS =  zhone.o \
 # --- Libraries 	
 LIBS     = -ltll6527mC   
 
+# --- Speex
+SPEEX    = speex*/libspeex/*.o  
 # --- name of final binary 
 TARGET = the_zhone
 
@@ -50,7 +52,7 @@ $(TARGET):$(OBJS)
 
 # pattern rule for compiling into object files
 .c.o:
-	$(CC)  $(INC_PATH) -g -c $(CFLAGS)  -o $@ $<  
+	$(CC)  $(INC_PATH) $(SPEEX) -g -c $(CFLAGS)  -o $@ $<  
 
 # --- Clean	
 clean: 

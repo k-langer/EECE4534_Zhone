@@ -2,8 +2,10 @@
 #define _ENCODER_H_
 
 #include "commonTypes.h"
+#include <speex/speex.h>
 
 #define FRAME_SIZE 160
+#define CHUNK_SIZE 160
 
 typedef struct decoder {
     int nbBytes; 
