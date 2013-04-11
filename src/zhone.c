@@ -71,14 +71,6 @@ return_value_t zhone_run( zhone_t* pThis) {
 				communicator_status = zhone.communicator.status;
 			}
 
-
-			communicator_status = zhone.communicator.status;
-
-			//WAIT FOR REMOTE ZHONE TO ANSWER THE CALL
-			while ( communicator_status == DIALING ) {
-				communicator_status = zhone.communicator.status;
-			}
-
 			//ACCEPT OR REJECT THE CALL AS INSTRUCTED
 			switch ( communicator_status ) {
 				case ACCEPT_CALL:
