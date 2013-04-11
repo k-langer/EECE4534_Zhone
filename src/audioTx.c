@@ -31,13 +31,15 @@
  * @param pchunk  pointer to tx chunk
  * @return void
  */
-void audioTx_dmaConfig(chunk_t *pchunk)
+void audioTx_dmaConfig(audioTx_t *pThis, chunk_t *pchunk)
 {
     DISABLE_DMA(*pDMA4_CONFIG);
-    *pDMA4_START_ADDR   = &pchunk->u16_buff[0]; /* set the start address */
-    *pDMA4_X_COUNT      = pchunk->bytesUsed/2;  // 16 bit data so we change the stride and count
-    *pDMA4_X_MODIFY     = 2;  /* the increment count */
-    ENABLE_DMA(*pDMA4_CONFIG); /* enable the DMA */
+    if ( pThis->running ) {
+		*pDMA4_START_ADDR   = &pchunk->u16_buff[0]; /* set the start address */
+		*pDMA4_X_COUNT      = pchunk->bytesUsed/2;  // 16 bit data so we change the stride and count
+		*pDMA4_X_MODIFY     = 2;  /* the increment count */
+		ENABLE_DMA(*pDMA4_CONFIG); /* enable the DMA */
+	}
 }
 
 
@@ -140,7 +142,7 @@ void audioTx_isr(void *pThisArg)
         *pDMA4_IRQ_STATUS  |= 0x0001;     // Clear the interrupt
         
         // config DMA either with new chunk (if there was one), or with old chunk on empty Q
-        audioTx_dmaConfig(pThis->pPending);        
+        audioTx_dmaConfig(pThis, pThis->pPending);
     }
 }
 
@@ -177,7 +179,7 @@ int audioTx_put(audioTx_t *pThis, chunk_t *pChunk)
         /* directly put chunk to DMA transfer & enable */
         pThis->running  = 1;
         pThis->pPending = pChunk;
-        audioTx_dmaConfig(pThis->pPending);  
+        audioTx_dmaConfig(pThis, pThis->pPending);
         ENABLE_SPORT0_TX();  
     } else { 
         /* DMA already running add chunk to queue */
@@ -193,8 +195,8 @@ int audioTx_put(audioTx_t *pThis, chunk_t *pChunk)
 }
 
 int audioTx_stop( audioTx_t *pThis ) {
-	DISABLE_DMA(*pDMA4_CONFIG);
-	queue_init( &( pThis->queue ), AUDIOTX_QUEUE_DEPTH );
+	pThis->running = 0;
+
 	return PASS;
 }
 
