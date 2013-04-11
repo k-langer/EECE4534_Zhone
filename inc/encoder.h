@@ -4,6 +4,7 @@
 #include "commonTypes.h"
 
 #define QUALITY 8
+#define FRAME_SIZE 160
 
 typedef struct encoder {
     int nbBytes; 
