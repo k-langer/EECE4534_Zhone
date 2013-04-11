@@ -83,7 +83,7 @@ typedef struct SpeexHeader {
 } SpeexHeader;
 */
 
-EXPORT void speex_init_header(SpeexHeader *header, int rate, int nb_channels, const SpeexMode *m)
+void speex_init_header(SpeexHeader *header, int rate, int nb_channels, const SpeexMode *m)
 {
    int i;
    const char *h="Speex   ";
@@ -118,7 +118,7 @@ EXPORT void speex_init_header(SpeexHeader *header, int rate, int nb_channels, co
    header->reserved2 = 0;
 }
 
-EXPORT char *speex_header_to_packet(SpeexHeader *header, int *size)
+char *speex_header_to_packet(SpeexHeader *header, int *size)
 {
    SpeexHeader *le_header;
    le_header = (SpeexHeader*)speex_alloc(sizeof(SpeexHeader));
@@ -142,7 +142,7 @@ EXPORT char *speex_header_to_packet(SpeexHeader *header, int *size)
    return (char *)le_header;
 }
 
-EXPORT SpeexHeader *speex_packet_to_header(char *packet, int size)
+SpeexHeader *speex_packet_to_header(char *packet, int size)
 {
    int i;
    SpeexHeader *le_header;
@@ -178,23 +178,11 @@ EXPORT SpeexHeader *speex_packet_to_header(char *packet, int size)
    ENDIAN_SWITCH(le_header->frames_per_packet);
    ENDIAN_SWITCH(le_header->extra_headers);
 
-   if (le_header->mode >= SPEEX_NB_MODES || le_header->mode < 0)
-   {
-      speex_notify("Invalid mode specified in Speex header");
-      speex_free (le_header);
-      return NULL;
-   }
-
-   if (le_header->nb_channels>2)
-      le_header->nb_channels = 2;
-   if (le_header->nb_channels<1)
-      le_header->nb_channels = 1;
-
    return le_header;
 
 }
 
-EXPORT void speex_header_free(void *ptr)
+void speex_header_free(void *ptr)
 {
    speex_free(ptr);
 }
