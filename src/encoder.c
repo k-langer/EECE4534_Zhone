@@ -34,21 +34,17 @@ int encoder_init(encoder_t* state)
 */
 int encoder_encode( encoder_t* pThis, chunk_t* pAudioChunk, chunk_t* pDataChunk)
 {
-    /*
     int i;
     int j;
     char* out = (char*)pDataChunk->u16_buff;
-    for (i = 0; i < CHUNK_SIZE/FRAME_SIZE; i++) {   
+    for (i = 0; i < CHUNK_SIZE/FRAME_SIZE; i++) {
         for (j = 0; j < FRAME_SIZE; j++) {
-            pThis->input[j] = (float)pAudioChunk->u16_buff[j+i*pThis->nbBytes]; 
-            
+            pThis->input[j] = (float)pAudioChunk->s16_buff[j+i*pThis->nbBytes];
         }   
         speex_bits_reset(&(pThis->bits));
         speex_encode(pThis->status, pThis->input, &(pThis->bits));
-        speex_bits_write(&(pThis->bits), out , pThis->nbBytes);
-        out +=pThis->nbBytes;
-    }       
+        speex_bits_write(&(pThis->bits), out + i*pThis->nbBytes , pThis->nbBytes);
+    }
     pDataChunk->bytesUsed = pThis->nbBytes*CHUNK_SIZE/FRAME_SIZE;
-    */
     return PASS;
 }
