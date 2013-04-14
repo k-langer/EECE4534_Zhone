@@ -50,7 +50,7 @@ all: $(TARGET)
 
 # link final binary
 $(TARGET):$(OBJS) 
-	$(CC) $(INC_PATH) $(LIB_PATH) $(CFLAGS) -o $@ $^ $(LIBS) $(LDFLAGS)
+	$(CC) $(INC_PATH) $(LIB_PATH) $(INC_SPEEX) $(SPEEX) $(CFLAGS) -o $@ $^ $(LIBS) $(LDFLAGS)
 
 # pattern rule for compiling into object files
 .c.o:
