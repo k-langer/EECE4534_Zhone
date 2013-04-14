@@ -1,6 +1,8 @@
 #include "chunk.h"
 #include "commonTypes.h"
 #include "encoder.h"
+#include <stdlib.h>
+#include <stdio.h>
 
 /*Encoder init configures the internal
   state of the encoder. Takes a blank
