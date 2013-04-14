@@ -11,8 +11,7 @@ typedef struct decoder {
     int nbBytes; 
     SpeexBits bits;     
     void* status; 
-    //char * input;   
-    float * output;
+    short * output;
     int outputSize;
 } decoder_t; 
 /*

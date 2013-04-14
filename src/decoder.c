@@ -14,7 +14,7 @@ int decoder_init(decoder_t* state, int nbBytes)
     speex_decoder_ctl((void*)state->status, SPEEX_SET_ENH, &enh);
     speex_bits_init(&(state->bits));
     state->nbBytes = nbBytes;
-    state->output = malloc(FRAME_SIZE*sizeof(float));
+    state->output = malloc(FRAME_SIZE*sizeof(short));
     return PASS;
 }
 
@@ -26,7 +26,7 @@ int decoder_decode(decoder_t* pThis, chunk_t* pDataChunk, chunk_t* pAudioChunk) 
     speex_bits_init(&pThis->bits);
     while (bytePos*nbBytes < pDataChunk->bytesUsed) {
         speex_bits_read_from(&pThis->bits,(char*)pDataChunk->u08_buff+bytePos*nbBytes,nbBytes); 
-        speex_decode(pThis->status,&pThis->bits,pThis->output);  
+        speex_decode_int(pThis->status,&pThis->bits,pThis->output);  
         for (i=0;i<FRAME_SIZE;i++) {
             pAudioChunk->u16_buff[i+FRAME_SIZE*bytePos] = pThis->output[i];
         }

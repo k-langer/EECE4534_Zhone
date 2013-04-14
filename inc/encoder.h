@@ -22,7 +22,7 @@ typedef struct encoder {
     int nbBytes; 
     SpeexBits bits;     
     void* status; 
-    float * input;   
+    short * input;   
     int outputSize;
 } encoder_t; 
 /* 
