@@ -12,12 +12,7 @@
         -add new return values here if necessary!
 ***/
 
-typedef enum {
-    PASS,
-    FAIL,
-    NO_DATA_AVAILABLE
-} return_value_t;
-
+typedef int return_value_t;
 
 /***
     zhone_address_t
