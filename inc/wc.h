@@ -32,6 +32,7 @@ typedef struct {
     bufferPool_t *pBufPool;
     wire_t wire;
     xbee_t xbee;
+    unsigned short to;
 } wc_t;
 
 /** Initializes the wireless communicator
