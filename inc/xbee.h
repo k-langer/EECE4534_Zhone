@@ -25,10 +25,13 @@
 #define GUARD_TIME 1000
 
 #define XBEE_MAX_PAYLOAD_LENGTH 120
-#define XBEE_MAX_DATA_LENGTH 100
+#define XBEE_MAX_DATA_LENGTH    100
 
-#define XBEE_RECEIVE_API_BYTE  0x81
-#define XBEE_TRANSMIT_API_BYTE 0x01
+#define XBEE_RECEIVE_API_BYTE           0x81
+#define XBEE_TRANSMIT_API_BYTE          0x01
+#define XBEE_TRANSMIT_STATUS_API_BYTE   0x89
+#define XBEE_AT_API_BYTE                0x08
+#define XBEE_AT_RESPONSE_API_BYTE       0x88
 
 typedef struct {
 	uartRx_t *rx;
@@ -42,11 +45,26 @@ typedef struct {
 } xbee_message_t;
 
 typedef struct {
+    unsigned char at_command;
+    unsigned short value;
+} xbee_at_message_t;
+
+typedef struct {
+    unsigned char at_command;
+    unsigned char status;
+    unsigned short value;
+} xbee_at_r_message_t;
+
+typedef struct {
     unsigned short to;
     unsigned char option;
     unsigned char pData[XBEE_MAX_DATA_LENGTH];
     unsigned char length;
 } xbee_transmit_message_t;
+
+typedef struct {
+    unsigned char status;
+} xbee_t_status_message_t;
 
 typedef struct {
     unsigned short from;
@@ -56,7 +74,7 @@ typedef struct {
     unsigned char length;
 } xbee_receive_message_t;
 
-int Xbee_Init(xbee_t *pThis, uartRx_t *rx, uartTx_t *tx);
+int Xbee_Init(xbee_t *pThis, uartRx_t *rx, uartTx_t *tx, bufferPool_t *pBufPool);
 
 /** Transmit message through the Xbee module
  *
@@ -144,6 +162,12 @@ int Xbee_UnpackReceiveMessage( xbee_message_t *pMsg, xbee_receive_message_t *pMe
  * @return Zero on sucess, positive otherwise
  */
 int Xbee_PrintReceiveMessage( xbee_receive_message_t *pMsg );
+
+int Xbee_UnpackTransmitStatusMessage( xbee_message_t *pMsg, xbee_t_status_message_t *pStatus_message );
+
+int Xbee_PackApiAtCommandMessage( xbee_at_message_t *pAt_msg, unsigned char *pMsg, unsigned char *pLength );
+
+int Xbee_UnpackAtApiResponseMessage( xbee_message_t *pMsg, xbee_at_r_message_t *pAt_message );
 
 /** Put the Xbee module into command mode
  *
