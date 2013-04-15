@@ -5,7 +5,7 @@
 #include <speex/speex.h>
 
 #define FRAME_SIZE 160
-#define CHUNK_SIZE 160
+#define CHUNK_SIZE 2560
 
 typedef struct decoder {
     int nbBytes; 
