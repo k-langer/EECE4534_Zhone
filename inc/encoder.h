@@ -9,8 +9,9 @@
 	frame size and greater than frame size
 	Controls the audio latency and the amount of
 	interupts audio tx will signal to fill the chunk
+	set to 2560 as to line up with SAMPLE_SIZE
 */ 
-#define CHUNK_SIZE 1120
+#define CHUNK_SIZE 2560
 /*
 	These two defines control
 	the bitrate of the encoder
