@@ -54,7 +54,7 @@ $(TARGET):$(OBJS)
 
 # pattern rule for compiling into object files
 .c.o:
-	$(CC)  $(INC_PATH) $(INC_SPEEX) $(SPEEX) -g -c $(CFLAGS)  -o $@ $<  
+	$(CC)  $(INC_PATH) $(INC_SPEEX) -g -c $(CFLAGS)  -o $@ $<  
 
 # --- Clean	
 clean: 
