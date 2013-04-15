@@ -16,13 +16,24 @@
 #define WC_H_
 
 #include "commonTypes.h"
-#include "uartRx.h"
-#include "uartTx.h"
-#include "wire.h"
-#include "xbee.h"
 #include "bufferPool.h"
 #include "queue.h"
 #include "chunk.h"
+#include "uartRx.h"
+#include "uartTx.h"
+
+#if WIRE
+#include "wire.h"
+#else
+#include "xbee.h"
+#endif
+
+/** Definitions */
+#define WC_INITIATE_CALL_BYTE   0x01
+#define WC_ACCEPT_CALL_BYTE     0x02
+#define WC_END_CALL_BYTE        0x03
+#define WC_REJECT_CALL_BYTE     0x04
+#define WC_DATA_BYTE            0x05
 
 /** Structures */
 typedef struct {
@@ -30,9 +41,13 @@ typedef struct {
     uartTx_t tx;
     isrDisp_t *pIsr;
     bufferPool_t *pBufPool;
+#if WIRE
     wire_t wire;
+#else
     xbee_t xbee;
+#endif
     unsigned short to;
+	phone_status_t status;
 } wc_t;
 
 /** Initializes the wireless communicator
@@ -43,19 +58,19 @@ typedef struct {
  *
  * @return PASS on success, FAIL otherwise
  */
-return_value_t Wc_Init( wc_t *pThis, bufferPool_t *pBufPool, isrDisp_t *pIsrDisp );
+int Wc_Init( wc_t *pThis, bufferPool_t *pBufPool, isrDisp_t *pIsrDisp );
 
 /** Starts the wireless communicator
  *
  * @return PASS on success, FAIL otherwise
  */
-return_value_t Wc_Start( void );
+int Wc_Start( wc_t *pThis );
 
 /** Stops the wireless communicator
  *
  * @return PASS on success, FAIL otherwise
  */
-return_value_t Wc_Stop( void );
+int Wc_Stop( wc_t *pThis );
 
 /** Sets who to target with the messages
  *
@@ -63,19 +78,19 @@ return_value_t Wc_Stop( void );
  *
  * @return PASS on sucess, FAIL otherwise
  */
-return_value_t Wc_SetDestination( unsigned short to );
+int Wc_SetDestination( wc_t *pThis, unsigned short to );
 
 /** Sends an initialize call message
  *
  * @return PASS on success, FAIL otherwise
  */
-return_value_t Wc_InitiateCall( void );
+int Wc_InitiateCall( wc_t *pThis );
 
 /** Sends an accept call message
  *
  * @return PASS on success, FAIL otherwise
  */
-return_value_t Wc_AcceptCall( void );
+int Wc_AcceptCall( wc_t *pThis );
 
 /** Sends a data message with the given data
  *
@@ -83,19 +98,19 @@ return_value_t Wc_AcceptCall( void );
  *
  * @return PASS on success, FAIL otherwise
  */
-return_value_t Wc_Send( chunk_t *pChunk );
+int Wc_Send( wc_t *pThis, chunk_t *pChunk );
 
 /** Sends an end call message
  *
  * @return PASS on success, FAIL otherwise
  */
-return_value_t Wc_EndCall( void );
+int Wc_EndCall( wc_t *pThis );
 
 /** Sends a reject call message
  *
  * @return PASS on sucess, FAIL otherwise
  */
-return_value_t Wc_RejectCall( void );
+int Wc_RejectCall( wc_t *pThis );
 
 /** Gets a message from the communicator
  *
@@ -103,6 +118,6 @@ return_value_t Wc_RejectCall( void );
  *
  * @return PASS on success, FAIL otherwise
  */
-return_value_t Wc_Receive( chunk_t *pChunk );
+int Wc_Receive( wc_t *pThis, chunk_t *pChunk );
 
 #endif /* WC_H_ */

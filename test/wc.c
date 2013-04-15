@@ -6,14 +6,12 @@
 #include <extio.h>
 #include <tll6527_core_timer.h>
 #include "startup.h"
-#include "uartRx.h"
-#include "uartTx.h"
+#include "wc.h"
 
-uartRx_t uartRx;
-uartTx_t uartTx;
 bufferPool_t bp;
 isrDisp_t isrDisp;
 chunk_t *chunk;
+wc_t wc;
 
 int main ( void )
 {
@@ -28,7 +26,8 @@ int main ( void )
     
     /* FPGA setup function to configure FPGA, make sure the FPGA configuration
     binary data is loaded in to SDRAM at "FPGA_DATA_START_ADDR" */
-    status = fpga_loader(0x3F6CF620); //returns 0 if successful and -1 if failed
+    status = fpga_loader(0xF445850D);
+    //status = fpga_loader(0x3F6CF620); //returns 0 if successful and -1 if failed
     if (status) {
         printf("\r\n FPGA Setup Failed"); 
         return -1;
@@ -53,53 +52,25 @@ int main ( void )
     }
 
     int i = 0;
-
-    bf52x_uart_settings settings = {
-        .parenable = 0,
-        .parity = 0,
-        .rxtx_baud = BF52X_BAUD_RATE_9600
-    };
-
-    bf52x_uart_deinit();
-    bf52x_uart_init(&settings); 
-
-    status = uartRx_init(&uartRx, &bp, &isrDisp);
+    status = Wc_Init(&wc, &bp, &isrDisp);
     if ( PASS != status ) {
         return FAIL;
     }
 
-    status = uartTx_init(&uartTx, &bp, &isrDisp);
+    status = Wc_Start(&wc);
     if ( PASS != status ) {
         return FAIL;
     }
-
-    status = uartRx_start(&uartRx);
-    if ( PASS != status ) {
-        return FAIL;
-    }
-
-    *pPORTF_FER |= 0xc000;
-    *pPORTF_MUX &= ~0x0400;
-    *pPORTF_MUX |= 0x0800;
-    *pPORTFIO_DIR |= 0x4000;
-    *pPORTFIO_DIR &= ~(0x8000);
 
     chunk_t *new_chunk = NULL;
 
-    char data[9];
-    bufferPool_acquire(&bp, &new_chunk);
-    
     while (1)
     {
-        uartRx_get(&uartRx, new_chunk);
-        if (new_chunk->bytesUsed > 0)
-        {
-            asm("nop;");
-            bufferPool_release(&bp, new_chunk);
-            new_chunk = NULL;
-            bufferPool_acquire(&bp, &new_chunk);
-        }
+        bufferPool_acquire(&bp, &new_chunk);
+        Wc_Receive(&wc, new_chunk);
+        asm("nop;");
+        bufferPool_release(&bp, new_chunk);
     }
 
-    return 0;
+    return PASS;
 }

@@ -137,9 +137,6 @@ void uartTx_isr(void *pThisArg)
     // validate that TX DMA IRQ was triggered 
     if (*pDMA11_IRQ_STATUS & 0x1)
     {
-    	// Clear TX interrupt
-        *pDMA11_IRQ_STATUS  |= 0x0001;
-
         /* release old chunk on success */
        bufferPool_release(pThis->pBuffP, pThis->pPending);
 
@@ -161,5 +158,8 @@ void uartTx_isr(void *pThisArg)
         	// no need to clean the DMA it is on one shot mode anyway
         	pThis->running = 0; // indicate next call will be a fresh start
         }
+
+    	// Clear TX interrupt
+        *pDMA11_IRQ_STATUS  |= 0x0001;
     }
 }

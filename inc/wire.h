@@ -1,3 +1,6 @@
+#ifndef WIRE_H_
+#define WIRE_H_
+
 #include "tll_common.h"
 #include "uartRx.h"
 #include "uartTx.h"
@@ -25,3 +28,5 @@ int Wire_GetMessageNb(wire_t *pThis, chunk_t *pChunk);
 
 int Wire_PackMessage(chunk_t *pChunk);
 int Wire_UnpackMessage(chunk_t *pChunk);
+
+#endif

@@ -12,8 +12,17 @@
  *
  *******************************************************************************/
 
+#include "startup.h"
+#include "bf52x_uart.h"
+#include "tll_common.h"
 #include "commonTypes.h"
 #include "wc.h"
+
+#if WIRE
+#include "wire.h"
+#else
+#include "xbee.h"
+#endif
 
 /** Initializes the wireless communicator
  *
@@ -23,13 +32,34 @@
  *
  * @return PASS on success, FAIL otherwise
  */
-return_value_t Wc_Init( wc_t *pThis, bufferPool_t *pBufPool, isrDisp_t *pIsrDisp )
+int Wc_Init( wc_t *pThis, bufferPool_t *pBufPool, isrDisp_t *pIsrDisp )
 {
-    uartRx_init(&pThis->rx, pThis->pIsr, pThis->pBufPool);
-    uartTx_init(&pThis->tx, pThis->pIsr, pThis->pBufPool);
+    pThis->pIsr     = pIsrDisp;
+    pThis->pBufPool = pBufPool;
 
-    Wire_Init(&pThis->wire, &pThis->rx, &pThis->tx, &pThis->pBufPool);
-    Xbee_Init(&pThis->xbee, &pThis->rx, &pThis->tx, &pThis->pBufPool);
+    bf52x_uart_settings settings = {
+        .parenable = 0,
+        .parity = 0,
+        .rxtx_baud = BF52X_BAUD_RATE_9600
+    };
+
+    bf52x_uart_deinit();
+    bf52x_uart_init(&settings); 
+
+    uartRx_init(&pThis->rx, pThis->pBufPool, pThis->pIsr);
+    uartTx_init(&pThis->tx, pThis->pBufPool, pThis->pIsr);
+
+    *pPORTF_FER |= 0xc000;
+    *pPORTF_MUX &= ~0x0400;
+    *pPORTF_MUX |= 0x0800;
+    *pPORTFIO_DIR |= 0x4000;
+    *pPORTFIO_DIR &= ~(0x8000);
+
+#if WIRE
+    Wire_Init(&pThis->wire, &pThis->rx, &pThis->tx, pThis->pBufPool);
+#else
+    Xbee_Init(&pThis->xbee, &pThis->rx, &pThis->tx, pThis->pBufPool);
+#endif
 
     return PASS;
 }
@@ -38,7 +68,7 @@ return_value_t Wc_Init( wc_t *pThis, bufferPool_t *pBufPool, isrDisp_t *pIsrDisp
  *
  * @return PASS on success, FAIL otherwise
  */
-return_value_t Wc_Start( wc_t *pThis, void )
+int Wc_Start( wc_t *pThis )
 {
     uartRx_start(&pThis->rx);
 
@@ -49,7 +79,7 @@ return_value_t Wc_Start( wc_t *pThis, void )
  *
  * @return PASS on success, FAIL otherwise
  */
-return_value_t Wc_Stop( wc_t *pThis, void )
+int Wc_Stop( wc_t *pThis )
 {
     return PASS;
 }
@@ -60,7 +90,7 @@ return_value_t Wc_Stop( wc_t *pThis, void )
  *
  * @return PASS on sucess, FAIL otherwise
  */
-return_value_t Wc_SetDestination( wc_t *pThis, unsigned short to )
+int Wc_SetDestination( wc_t *pThis, unsigned short to )
 {
     pThis->to = to;
     
@@ -71,15 +101,19 @@ return_value_t Wc_SetDestination( wc_t *pThis, unsigned short to )
  *
  * @return PASS on success, FAIL otherwise
  */
-return_value_t Wc_InitiateCall( wc_t *pThis, void )
+int Wc_InitiateCall( wc_t *pThis )
 {
     chunk_t *pChunk = NULL;
     if (PASS == bufferPool_acquire(pThis->pBufPool, &pChunk))
     {
-        pChunk->u08_buff[0] = INITIATE_CALL_BYTE;
+        pChunk->u08_buff[0] = WC_INITIATE_CALL_BYTE;
         pChunk->bytesUsed = 1;
 
-        return Wire_Send(&pThis->wire, pChunk);
+#if WIRE
+        return Wire_SendMessage(&pThis->wire, pChunk);
+#else
+        return Xbee_SendTransmitMessage(&pThis->xbee, pThis->to, pChunk);
+#endif
     }
     return FAIL;
 }
@@ -88,15 +122,19 @@ return_value_t Wc_InitiateCall( wc_t *pThis, void )
  *
  * @return PASS on success, FAIL otherwise
  */
-return_value_t Wc_AcceptCall( wc_t *pThis, void )
+int Wc_AcceptCall( wc_t *pThis )
 {
     chunk_t *pChunk = NULL;
     if (PASS == bufferPool_acquire(pThis->pBufPool, &pChunk))
     {
-        pChunk->u08_buff[0] = ACCEPT_CALL_BYTE;
+        pChunk->u08_buff[0] = WC_ACCEPT_CALL_BYTE;
         pChunk->bytesUsed = 1;
 
-        return Wire_Send(&pThis->wire, pChunk);
+#if WIRE
+        return Wire_SendMessage(&pThis->wire, pChunk);
+#else
+        return Xbee_SendTransmitMessage(&pThis->xbee, pThis->to, pChunk);
+#endif
     }
     return FAIL;
 }
@@ -107,7 +145,7 @@ return_value_t Wc_AcceptCall( wc_t *pThis, void )
  *
  * @return PASS on success, FAIL otherwise
  */
-return_value_t Wc_Send( wc_t *pThis, chunk_t *pChunk )
+int Wc_Send( wc_t *pThis, chunk_t *pChunk )
 {
     int i;
     int len = pChunk->bytesUsed;
@@ -115,25 +153,33 @@ return_value_t Wc_Send( wc_t *pThis, chunk_t *pChunk )
     {
         pChunk->u08_buff[i+1] = pChunk->u08_buff[i];
     }
-    pChunk->u08_buff[0] = DATA_BYTE;
+    pChunk->u08_buff[0] = WC_DATA_BYTE;
     pChunk->bytesUsed = 1 + len;
 
-    return Wire_Send(&pThis->wire, pChunk);
+#if WIRE
+        return Wire_SendMessage(&pThis->wire, pChunk);
+#else
+        return Xbee_SendTransmitMessage(&pThis->xbee, pThis->to, pChunk);
+#endif
 }
 
 /** Sends an end call message
  *
  * @return PASS on success, FAIL otherwise
  */
-return_value_t Wc_EndCall( wc_t *pThis, void )
+int Wc_EndCall( wc_t *pThis )
 {
     chunk_t *pChunk = NULL;
     if (PASS == bufferPool_acquire(pThis->pBufPool, &pChunk))
     {
-        pChunk->u08_buff[0] = END_CALL_BYTE;
+        pChunk->u08_buff[0] = WC_END_CALL_BYTE;
         pChunk->bytesUsed = 1;
 
-        return Wire_Send(&pThis->wire, pChunk);
+#if WIRE
+        return Wire_SendMessage(&pThis->wire, pChunk);
+#else
+        return Xbee_SendTransmitMessage(&pThis->xbee, pThis->to, pChunk);
+#endif
     }
     return FAIL;
 }
@@ -142,15 +188,19 @@ return_value_t Wc_EndCall( wc_t *pThis, void )
  *
  * @return PASS on sucess, FAIL otherwise
  */
-return_value_t Wc_RejectCall( wc_t *pThis, void )
+int Wc_RejectCall( wc_t *pThis )
 {
     chunk_t *pChunk = NULL;
     if (PASS == bufferPool_acquire(pThis->pBufPool, &pChunk))
     {
-        pChunk->u08_buff[0] = REJECT_CALL_BYTE;
+        pChunk->u08_buff[0] = WC_REJECT_CALL_BYTE;
         pChunk->bytesUsed = 1;
 
-        return Wire_Send(&pThis->wire, pChunk);
+#if WIRE
+        return Wire_SendMessage(&pThis->wire, pChunk);
+#else
+        return Xbee_SendTransmitMessage(&pThis->xbee, pThis->to, pChunk);
+#endif
     }
     return FAIL;
 }
@@ -161,8 +211,46 @@ return_value_t Wc_RejectCall( wc_t *pThis, void )
  *
  * @return PASS on success, FAIL otherwise
  */
-return_value_t Wc_Receive(a wc_t *pThis, chunk_t *pChunk )
+int Wc_Receive( wc_t *pThis, chunk_t *pChunk )
 {
-    /* Check for status update or data */
+    unsigned char received_msg = 0;
+    while (!received_msg)
+    {
+#if WIRE
+        if ( FAIL == Wire_GetMessageNb(&pThis->wire, pChunk) )
+#else
+        if ( FAIL == Xbee_GetMessageNb(&pThis->xbee, pChunk) )
+#endif
+        {
+            return FAIL;
+        }
+
+        int i;
+        switch (pChunk->u08_buff[0])
+        {
+            case WC_INITIATE_CALL_BYTE:
+                pThis->status = DIALING;
+                break;
+            case WC_ACCEPT_CALL_BYTE:
+                pThis->status = ACCEPT_CALL;
+                break;
+            case WC_END_CALL_BYTE:
+                pThis->status = END_CALL;
+                break;
+            case WC_REJECT_CALL_BYTE:
+                pThis->status = IDLE;
+                break;
+            case WC_DATA_BYTE:
+                for (i = 1; i < pChunk->bytesUsed; i++)
+                {
+                    pChunk->u08_buff[i-1] = pChunk->u08_buff[i];
+                }
+                pChunk->bytesUsed--;
+                received_msg = 1;
+                break;
+            default:
+                break;
+        }
+    }
     return PASS;
 }

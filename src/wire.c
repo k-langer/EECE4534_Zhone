@@ -73,6 +73,7 @@ int Wire_PackMessage(chunk_t *pChunk)
     pChunk->u08_buff[1] = (packet_length >> 8) & 0xff;
     pChunk->u08_buff[2] = packet_length & 0xff;
     pChunk->u08_buff[packet_length + 3] = 0xff - payload_crc;
+	pChunk->bytesUsed = packet_length + 4;
 
     return PASS;
 }

@@ -134,14 +134,14 @@ int Xbee_ParseMessage( xbee_t *pThis, chunk_t *pChunk)
 
 int Xbee_GetMessage( xbee_t *pThis, chunk_t *pChunk )
 {
-    //do
-    //{
+    do
+    {
         if ( FAIL == uartRx_get(pThis->rx, pChunk))
         {
             return FAIL;
         }
-    //}
-    //while (FAIL == Xbee_ParseMessage(pThis, pChunk));
+    }
+    while (FAIL == Xbee_ParseMessage(pThis, pChunk));
 
     return PASS;
 }
@@ -149,14 +149,14 @@ int Xbee_GetMessage( xbee_t *pThis, chunk_t *pChunk )
 
 int Xbee_GetMessageNb( xbee_t *pThis, chunk_t *pChunk )
 {
-    //do
-    //{
+    do
+    {
         if ( FAIL == uartRx_getNb(pThis->rx, pChunk))
         {
             return FAIL;
         }
-    //}
-    //while (FAIL == Xbee_ParseMessage(pThis, pChunk));
+    }
+    while (FAIL == Xbee_ParseMessage(pThis, pChunk));
 
     return PASS;
 }

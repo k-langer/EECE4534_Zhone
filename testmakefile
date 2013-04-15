@@ -5,16 +5,29 @@ CFLAGS = -Wall -specs=$(TLL6527M_C_DIR)/common/inc/spec/tll6527m
 # add debug flag 
 CFLAGS += -g
 
-TARGET = uart-blackfin
+# -- Switches from Xbee messaging to basic Wire messaging
+CFLAGS += -DWIRE
+
+UART_TARGET = uart-blackfin
+WC_TARGET = wc-blackfin
+
+TARGET = $(UART_TARGET) $(WC_TARGET)
 
 # -- Include Path
 INC_PATH = -Iinc
 
-OBJS = test/uart.o \
-	   src/uartRx.o \
-	   src/uartTx.o \
-	   src/xbee.o \
-	   src/wire.c
+UART_OBJS = test/uart.o \
+	   		src/uartRx.o \
+	   		src/uartTx.o \
+	   		src/xbee.o \
+	   		src/wire.o
+
+WC_OBJS = test/wc.o \
+	      src/uartRx.o \
+	      src/uartTx.o \
+	      src/xbee.o \
+	      src/wire.o \
+		  src/wc.o
 
 # --- Libraries 	
 LIBS     = -ltll6527mC   
@@ -31,9 +44,15 @@ endif
 all: $(TARGET)
 
 # link final binary
-$(TARGET):$(OBJS) 
+$(UART_TARGET):$(UART_OBJS) 
+	$(CC) $(INC_PATH) $(LIB_PATH) $(CFLAGS) -o $@ $^ $(LIBS) $(LDFLAGS)
+
+$(WC_TARGET):$(WC_OBJS) 
 	$(CC) $(INC_PATH) $(LIB_PATH) $(CFLAGS) -o $@ $^ $(LIBS) $(LDFLAGS)
 
 # pattern rule for compiling into object files
 .c.o:
 	$(CC)  $(INC_PATH) -g -c $(CFLAGS)  -o $@ $<  
+
+clean:
+	rm -f *.o src/*.o test/*.o $(TARGET)
