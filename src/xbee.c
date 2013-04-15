@@ -11,6 +11,9 @@
  * @author:  Todd Lunter
  * @created: March 24, 2013
  *
+ * @todo:   fix get message blocking
+ *          complete message types
+ *          smoother transition between message types
  *******************************************************************************/
 
 #include <stdio.h>
@@ -52,10 +55,11 @@ void Xbee_Sleep( unsigned int time )
 	while (i++ < time * 1000000);
 }
 
-int Xbee_Init(xbee_t *pThis, uartRx_t *rx, uartTx_t *tx)
+int Xbee_Init(xbee_t *pThis, uartRx_t *rx, uartTx_t *tx, bufferPool_t *pBufPool)
 {
 	pThis->rx = rx;
 	pThis->tx = tx;
+    pThis->bp = pBufPool;
 
 	return PASS;
 }
@@ -83,21 +87,77 @@ int Xbee_SendMessage( xbee_t *pThis, chunk_t *pChunk )
  *
  * @return Zero on success, positive otherwise
  */
+int Xbee_ParseMessage( xbee_t *pThis, chunk_t *pChunk)
+{
+    int return_type = PASS;
+    if (pChunk->s08_buff[0] == 0x7e )
+    {
+        xbee_message_t *msg = (xbee_message_t *)malloc(sizeof(xbee_message_t));
+        if (FAIL == Xbee_UnpackMessage(pChunk->u08_buff, pChunk->bytesUsed, msg))
+        {
+            return_type = FAIL;
+        }
+        else
+        {
+            xbee_receive_message_t *receive_msg = (xbee_receive_message_t *)malloc(sizeof(xbee_receive_message_t));
+            switch (msg->payload[0])
+            {
+                case XBEE_RECEIVE_API_BYTE:
+                    Xbee_UnpackReceiveMessage(msg, receive_msg);
+                    int i;
+                    for (i = 0; i < receive_msg->length; i++)
+                    {
+                        pChunk->u08_buff[i] = receive_msg->pData[i];
+                    }
+                    pChunk->bytesUsed = receive_msg->length;
+                    break;
+                case XBEE_TRANSMIT_STATUS_API_BYTE:
+                    return_type = FAIL;
+                    break;
+                case XBEE_AT_RESPONSE_API_BYTE:
+                    return_type = FAIL;
+                    break;
+                default:
+                    return_type = FAIL;
+                    break;
+            }
+        }
+    }
+
+    if (FAIL == return_type)
+    {
+        pChunk->bytesUsed = 0;
+    }
+
+    return return_type;
+}
+
 int Xbee_GetMessage( xbee_t *pThis, chunk_t *pChunk )
 {
-	if ( FAIL == uartRx_get(pThis->rx, pChunk))
-	{
-		return FAIL;
-	}
+    //do
+    //{
+        if ( FAIL == uartRx_get(pThis->rx, pChunk))
+        {
+            return FAIL;
+        }
+    //}
+    //while (FAIL == Xbee_ParseMessage(pThis, pChunk));
+
     return PASS;
 }
 
+
 int Xbee_GetMessageNb( xbee_t *pThis, chunk_t *pChunk )
 {
-	if ( FAIL == uartRx_getNb(pThis->rx, pChunk))
-	{
-		return FAIL;
-	}
+    //do
+    //{
+        if ( FAIL == uartRx_getNb(pThis->rx, pChunk))
+        {
+            return FAIL;
+        }
+    //}
+    //while (FAIL == Xbee_ParseMessage(pThis, pChunk));
+
     return PASS;
 }
 
@@ -165,7 +225,6 @@ int Xbee_UnpackMessage( unsigned char *pMsg, unsigned char length, xbee_message_
     {
         return FAIL;
     }
-    pMsg = pMsg + unpacked_length;
     return PASS;
 }
 
@@ -237,7 +296,7 @@ int Xbee_SendTransmitMessage( xbee_t *pThis, unsigned short to, chunk_t *pChunk 
  *
  * @return Zero on success, positive otherwise
  */
-int Xbee_PackTransmitMessage( xbee_transmit_message_t *pTransmit_msg, unsigned char *pMsg, unsigned char *pLength)
+int Xbee_PackTransmitMessage( xbee_transmit_message_t *pTransmit_msg, unsigned char *pMsg, unsigned char *pLength )
 {
 	static unsigned char frame = 1;
 	if (frame == 0)
@@ -306,6 +365,65 @@ int Xbee_PrintReceiveMessage( xbee_receive_message_t *pMsg )
     for (length = 0; length < pMsg->length; length++)
         printf(" %02x", pMsg->pData[length]);
     printf("\n");
+
+    return PASS;
+}
+
+int Xbee_UnpackTransmitStatusMessage( xbee_message_t *pMsg, xbee_t_status_message_t *pStatus_message )
+{
+    unsigned char parsed_length = 0;
+
+    if (pMsg->payload[parsed_length++] != XBEE_TRANSMIT_STATUS_API_BYTE)
+    {
+        return FAIL;
+    }
+    parsed_length++; // Don't care about the frame
+
+    pStatus_message->status = pMsg->payload[parsed_length++];
+
+    return PASS;
+}
+
+int Xbee_PackApiAtCommandMessage( xbee_at_message_t *pAt_msg, unsigned char *pMsg, unsigned char *pLength )
+{
+	static unsigned char frame = 1;
+	if (frame == 0)
+		frame++;
+
+    xbee_message_t *xbee_msg = (xbee_message_t *)malloc(sizeof(xbee_message_t));
+    xbee_msg->length = 0;
+
+    xbee_msg->payload[xbee_msg->length++] = XBEE_AT_API_BYTE;
+    xbee_msg->payload[xbee_msg->length++] = frame;
+    xbee_msg->payload[xbee_msg->length++] = pAt_msg->at_command >> 8;
+    xbee_msg->payload[xbee_msg->length++] = pAt_msg->at_command & 0xff;
+
+    char msg[4] = {0};
+    sprintf(msg, "%04x", pAt_msg->value);
+    xbee_msg->payload[xbee_msg->length++] = msg[0];
+    xbee_msg->payload[xbee_msg->length++] = msg[1];
+    xbee_msg->payload[xbee_msg->length++] = msg[2];
+    xbee_msg->payload[xbee_msg->length++] = msg[3];
+
+    return Xbee_PackMessage(xbee_msg, pMsg, pLength);
+}
+
+int Xbee_UnpackAtApiResponseMessage( xbee_message_t *pMsg, xbee_at_r_message_t *pAt_message )
+{
+    unsigned char parsed_length = 0;
+
+    if (pMsg->payload[parsed_length++] != XBEE_AT_RESPONSE_API_BYTE)
+    {
+        return FAIL;
+    }
+    parsed_length++; // Don't care about the frame
+
+    pAt_message->at_command = pMsg->payload[parsed_length++] << 8;
+    pAt_message->at_command |= pMsg->payload[parsed_length++] & 0xff;
+    pAt_message->status = pMsg->payload[parsed_length++];
+
+    pMsg->payload[pMsg->length] = 0;
+    pAt_message->value = Xbee_ParseHex((char*)pMsg->payload+parsed_length);
 
     return PASS;
 }

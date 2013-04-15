@@ -9,13 +9,15 @@
 #include "uartRx.h"
 #include "uartTx.h"
 #include "xbee.h"
+#include "wire.h"
 
-xbee_t xbee;
+//xbee_t xbee;
 uartRx_t uartRx;
 uartTx_t uartTx;
 bufferPool_t bp;
 isrDisp_t isrDisp;
 chunk_t *chunk;
+wire_t wire;
 
 int main ( void )
 {
@@ -30,7 +32,8 @@ int main ( void )
     
     /* FPGA setup function to configure FPGA, make sure the FPGA configuration
     binary data is loaded in to SDRAM at "FPGA_DATA_START_ADDR" */
-    status = fpga_loader(0x3F6CF620); //returns 0 if successful and -1 if failed
+    status = fpga_loader(0xF445850D);
+    //status = fpga_loader(0x3F6CF620); //returns 0 if successful and -1 if failed
     if (status) {
         printf("\r\n FPGA Setup Failed"); 
         return -1;
@@ -80,7 +83,8 @@ int main ( void )
         return FAIL;
     }
 
-    status = Xbee_Init(&xbee, &uartRx, &uartTx);
+    //status = Xbee_Init(&xbee, &uartRx, &uartTx);
+    status = Wire_Init(&wire, &uartRx, &uartTx, &bp);
     if ( PASS != status ) {
         return FAIL;
     }
@@ -93,39 +97,38 @@ int main ( void )
 
     chunk_t *new_chunk = NULL;
 
-    while (1)
-    {
-        //bufferPool_acquire(&bp, &new_chunk);
+    char data[9];
 
-        //unsigned char msg[] = { 0x48, 0x65, 0x6c, 0x6c, 0x6f };
-        //for (i = 0; i < 5; i++)
-        //{
-        //    new_chunk->u08_buff[i] = msg[i];
-        //}
+    //while (1)
+    //{
+    //    bufferPool_acquire(&bp, &new_chunk);
 
-        //new_chunk->bytesUsed = 5;
-        //Xbee_SendTransmitMessage(&xbee, 2, new_chunk);
+    //    unsigned char msg[] = { 0x48, 0x65, 0x6c, 0x6c, 0x6f };
+    //    for (i = 0; i < 5; i++)
+    //    {
+    //        new_chunk->u08_buff[i] = msg[i];
+    //    }
 
-        bufferPool_acquire(&bp, &new_chunk);
+    //    new_chunk->bytesUsed = 5;
+    //    Wire_SendMessage(&wire, new_chunk);
 
-        Xbee_GetMessage(&xbee, new_chunk);
-        if (new_chunk->bytesUsed > 0)
-        {
-            xbee_message_t xb_m;
-            xbee_receive_message_t xb_rm;
-            Xbee_UnpackMessage(new_chunk->u08_buff, new_chunk->bytesUsed, &xb_m);
-            Xbee_UnpackReceiveMessage(&xb_m, &xb_rm);
-            asm("nop;");
+    //    bufferPool_acquire(&bp, &new_chunk);
 
-            bufferPool_release(&bp, new_chunk);
-            new_chunk = NULL;
-        }
-        i = 0;
-        while (i++ < 150000000);
-    }
+    //    while (FAIL == Wire_GetMessageNb(&wire, new_chunk))
+    //    {
+    //        i = 0;
+    //        while (i++ < 150000);
+    //    }
+
+    //    bufferPool_release(&bp, new_chunk);
+    //    new_chunk = NULL;
+    //}
+    //bufferPool_acquire(&bp, &new_chunk);
     
     //while (1)
     //{
+    //    //bf52x_uart_receive(data, 9);
+    //    //asm("nop;");
     //    uartRx_get(&uartRx, new_chunk);
     //    if (new_chunk->bytesUsed > 0)
     //    {

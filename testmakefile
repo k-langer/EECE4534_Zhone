@@ -13,7 +13,8 @@ INC_PATH = -Iinc
 OBJS = test/uart.o \
 	   src/uartRx.o \
 	   src/uartTx.o \
-	   src/xbee.o
+	   src/xbee.o \
+	   src/wire.c
 
 # --- Libraries 	
 LIBS     = -ltll6527mC   
