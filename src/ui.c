@@ -37,8 +37,8 @@ void ui_init( ui_t *pThis, isrDisp_t *isrDisp ) {
 	extio_callbackRegister(EXTIO_SW2_HIGH, ui_button2_ISR, (void *) pThis);
 
 
-	//display_init();
-
+	display_init();
+	display_mainMenu(); 
 
 }
 
