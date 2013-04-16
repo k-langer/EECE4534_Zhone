@@ -11,12 +11,18 @@
 #include "bufferPool.h"
 #include "isrDisp.h"
 #include "chunk.h"
+#include "encoder.h"
+#include "decoder.h"
 
 bufferPool_t bufferPool;
 isrDisp_t isrDisp;
 chunk_t* testChunk;
+chunk_t* dataChunk;
+chunk_t* readyChunk;
 audioRx_t testInput;
 audioTx_t testOutput;
+encoder_t encoder;
+decoder_t decoder;
 
 #define I2C_CLOCK   (400*_1KHZ)
 
@@ -45,6 +51,8 @@ int main(void)
     bufferPool_init( &bufferPool );
     isrDisp_init( &isrDisp );
     chunk_init( testChunk );
+    chunk_init( dataChunk );
+    chunk_init( readyChunk );
 
     bf52xI2cMaster_init(0, I2C_CLOCK);
     status = ssm2602_init( &isrDisp, 0x2F, SSM2602_SR_8000/2, SSM2602_TX );
@@ -56,13 +64,17 @@ int main(void)
 
     audioTx_init( &testOutput, &bufferPool, &isrDisp );
     audioRx_init( &testInput, &bufferPool, &isrDisp );
+    encoder_init( &encoder );
+    decoder_init( &decoder, encoder.nbBytes );
 
     audioRx_start( &testInput );
     audioTx_start( &testOutput );
 
     while( 1 ) {
     	if ( audioRx_getNbNc( &testInput, &testChunk) == PASS ) {
-            audioTx_put( &testOutput, testChunk );
+    		encoder_encode( &encoder, testChunk, dataChunk );
+    		decoder_decode( &decoder, dataChunk, readyChunk );
+            audioTx_put( &testOutput, readyChunk );
 		}
     }
 
