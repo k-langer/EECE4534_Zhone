@@ -1,5 +1,5 @@
 #include "phonebook.h"
-#include "commontypes.h"
+#include "commonTypes.h"
 
 return_value_t phonebook_init(phonebook_t* pThis, zhone_address_t address1, zhone_address_t address2) {
     pThis->address1 = address1;

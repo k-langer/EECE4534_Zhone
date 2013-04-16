@@ -1,6 +1,8 @@
 #ifndef COMMONTYPES_H
 #define COMMONTYPES_H
 
+#include "tll_common.h"
+
 /***
     Common Types
         -header file containing any typedefs we decide to create for clearer code

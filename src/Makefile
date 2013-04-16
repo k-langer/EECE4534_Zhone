@@ -20,10 +20,14 @@ INC_SPEEX = -I ../speex/include
 
 # -- Objects 
 OBJS =  zhone.o \
+	receive_path.o \
+	transfer_path.o \
 	phonebook.o \
 	encoder.o \
 	decoder.o \
 	audioTx.o \
+	wc.o \
+	ui.o \
 	audioRx.o
 
 # --- Libraries 	

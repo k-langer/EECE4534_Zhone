@@ -7,7 +7,7 @@
 #include "audioTx.h"
 #include "isrDisp.h"
 #include "decoder.h"
-#include "communicator.h"
+#include "wc.h"
 
 /***
     Receive Path

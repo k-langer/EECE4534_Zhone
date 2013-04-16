@@ -7,7 +7,7 @@
 #include "bufferPool.h"
 #include "receive_path.h"
 #include "transfer_path.h"
-#include "communicator.h"
+#include "wc.h"
 #include "isrDisp.h"
 
 

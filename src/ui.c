@@ -1,6 +1,6 @@
 #include "ui.h" 
 #include "display.h"
-#include "commontypes.h" 
+#include "commonTypes.h" 
 
 
 /***
@@ -68,12 +68,12 @@ void ui_button1_ISR ( ui_t* pThis ) {
 		ui_set_status( pThis,CALL1 );       //call user1 (when ZigBee detects this and starts sending packets, it needs to change status to DIALING)
 		display_makingCallMenu();	        //update the LED display
 
-	} else if ( currentStatus == RECEIVING1 ) { 
+	} else if ( currentStatus == RECEIVING ) { 
 
 		ui_set_status( pThis,IN_CALL );    //accept a call from user1 -> go to IN_CALL
 		display_inCallMenu();              //update LED display 
 
-	} else if ( currentStatus == RECEIVING2 ) { 
+	} else if ( currentStatus == RECEIVING ) { 
 
 		ui_set_status( pThis,IN_CALL );    //accept a call from user2 -> go to IN_CALL
 		display_inCallMenu();              //update LED display 

@@ -6,7 +6,7 @@
 #include "bufferPool.h"
 #include "audioRx.h"
 #include "isrDisp.h"
-#include "communicator.h"
+#include "wc.h"
 #include "encoder.h"
 
 /***

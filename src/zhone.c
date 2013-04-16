@@ -2,7 +2,6 @@
 
 #include <stdio.h>
 
-
 return_value_t zhone_init( zhone_t* pThis) {
 
 	zhone_t zhone = *pThis;
@@ -62,7 +61,7 @@ return_value_t zhone_run( zhone_t* pThis) {
 			}
 
 			ui_set_status( &zhone.ui, DIALING );
-			Wc_SetStatus( &zhone.communicator, DIALING );
+			zhone.communicator.status = DIALING;
 
 			communicator_status = zhone.communicator.status;
 
@@ -74,11 +73,11 @@ return_value_t zhone_run( zhone_t* pThis) {
 			//ACCEPT OR REJECT THE CALL AS INSTRUCTED
 			switch ( communicator_status ) {
 				case ACCEPT_CALL:
-					Wc_SetStatus ( &zhone.communicator, IN_CALL );
+					zhone.communicator.status = IN_CALL;
 					ui_set_status( &zhone.ui, IN_CALL );
 					break;
 				case REJECT_CALL:
-					Wc_SetStatus( &zhone.communicator, IDLE );
+					zhone.communicator.status = IDLE;
 					ui_set_status( &zhone.ui, IDLE );
 					continue;	//go back to beginning of big while(1)
 				default:
@@ -102,14 +101,14 @@ return_value_t zhone_run( zhone_t* pThis) {
 					if ( Wc_AcceptCall( &zhone.communicator ) == FAIL ) {
 						return FAIL;
 					}
-					Wc_SetStatus( &zhone.communicator, IN_CALL );
+					zhone.communicator.status = IN_CALL;
 					ui_set_status( &zhone.ui, IN_CALL );
 					break;
 				case REJECT_CALL:
 					if ( Wc_RejectCall( &zhone.communicator ) == FAIL ) {
 						return FAIL;
 					}
-					Wc_SetStatus( &zhone.communicator, IDLE );
+					zhone.communicator.status = IDLE;
 					ui_set_status( &zhone.ui, IDLE );
 					continue;	//go back to beginning of big while(1)
 				default:
@@ -152,7 +151,7 @@ return_value_t zhone_run( zhone_t* pThis) {
 		}
 
 		ui_set_status( &zhone.ui, IDLE );
-		Wc_SetStatus( &zhone.communicator, IDLE );
+		zhone.communicator.status = IDLE;
 
 	}
 	
