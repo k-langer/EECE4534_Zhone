@@ -34,12 +34,10 @@
 void audioTx_dmaConfig(audioTx_t *pThis, chunk_t *pchunk)
 {
     DISABLE_DMA(*pDMA4_CONFIG);
-    if ( pThis->running ) {
-		*pDMA4_START_ADDR   = &pchunk->u16_buff[0]; /* set the start address */
-		*pDMA4_X_COUNT      = pchunk->bytesUsed/2;  // 16 bit data so we change the stride and count
-		*pDMA4_X_MODIFY     = 2;  /* the increment count */
-		ENABLE_DMA(*pDMA4_CONFIG); /* enable the DMA */
-	}
+	*pDMA4_START_ADDR   = &pchunk->u16_buff[0]; /* set the start address */
+	*pDMA4_X_COUNT      = pchunk->bytesUsed/2;  // 16 bit data so we change the stride and count
+	*pDMA4_X_MODIFY     = 2;  /* the increment count */
+	ENABLE_DMA(*pDMA4_CONFIG); /* enable the DMA */
 }
 
 
@@ -76,7 +74,7 @@ int audioTx_init(audioTx_t *pThis, bufferPool_t *pBuffP,
  
     /* Configure the DMA4 for TX (data transfer/memory read) */
     /* Read, 1-D, interrupt enabled, 16 bit transfer, Auto buffer */
-    *pDMA4_CONFIG = WDSIZE_16 | DI_EN | DI_EN; /* 16 bit amd DMA enable */
+    *pDMA4_CONFIG = WDSIZE_16 | DI_EN | FLOW_AUTO; /* 16 bit amd DMA enable */
     
     // register own ISR to the ISR dispatcher
     isrDisp_registerCallback(pIsrDisp, ISR_DMA4_SPORT0_TX, audioTx_isr, pThis);
@@ -98,8 +96,9 @@ int audioTx_init(audioTx_t *pThis, bufferPool_t *pBuffP,
  */
 int audioTx_start(audioTx_t *pThis)
 {
-     
-    printf("[AUDIO TX]: audioTx_start: implemented\r\n");
+	*pDMA4_CONFIG = WDSIZE_16 | DI_EN | FLOW_AUTO;
+
+	printf("tx started!\n");
 
     // empty nothing to be done, DMA kicked off during run time 
     return PASS;   
@@ -195,7 +194,7 @@ int audioTx_put(audioTx_t *pThis, chunk_t *pChunk)
 }
 
 int audioTx_stop( audioTx_t *pThis ) {
-	pThis->running = 0;
+	*( pDMA3_CONFIG ) &= ~( DI_EN );
 
 	return PASS;
 }
