@@ -1,0 +1,58 @@
+CC = bfin-elf-gcc
+
+# -- Compile Flags
+CFLAGS = -Wall -specs=$(TLL6527M_C_DIR)/common/inc/spec/tll6527m 
+# add debug flag 
+CFLAGS += -g
+
+# -- Switches from Xbee messaging to basic Wire messaging
+CFLAGS += -DWIRE
+
+UART_TARGET = uart-blackfin
+WC_TARGET = wc-blackfin
+
+TARGET = $(UART_TARGET) $(WC_TARGET)
+
+# -- Include Path
+INC_PATH = -Iinc
+
+UART_OBJS = test/uart.o \
+	   		src/uartRx.o \
+	   		src/uartTx.o \
+	   		src/xbee.o \
+	   		src/wire.o
+
+WC_OBJS = test/wc.o \
+	      src/uartRx.o \
+	      src/uartTx.o \
+	      src/xbee.o \
+	      src/wire.o \
+		  src/wc.o
+
+# --- Libraries 	
+LIBS     = -ltll6527mC   
+
+# Linker file 
+LDFLAGS = -T$(TLL6527M_C_DIR)/common/inc/spec/tll6527m_sdram.lds
+
+# check that TLL6527M_C_DIR variable is defined before starting
+ifeq ($(TLL6527M_C_DIR),)
+$(error ERROR: TLL6527M_C_DIR environment var not set! Source environment settings first (e.g. source setup.csh))
+endif
+
+# --- Compilation 
+all: $(TARGET)
+
+# link final binary
+$(UART_TARGET):$(UART_OBJS) 
+	$(CC) $(INC_PATH) $(LIB_PATH) $(CFLAGS) -o $@ $^ $(LIBS) $(LDFLAGS)
+
+$(WC_TARGET):$(WC_OBJS) 
+	$(CC) $(INC_PATH) $(LIB_PATH) $(CFLAGS) -o $@ $^ $(LIBS) $(LDFLAGS)
+
+# pattern rule for compiling into object files
+.c.o:
+	$(CC)  $(INC_PATH) -g -c $(CFLAGS)  -o $@ $<  
+
+clean:
+	rm -f *.o src/*.o test/*.o $(TARGET)

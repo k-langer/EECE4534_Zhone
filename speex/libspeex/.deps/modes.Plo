@@ -1,0 +1,64 @@
+modes.lo: modes.c ../config.h modes.h ../include/speex/speex.h \
+  ../include/speex/speex_bits.h ../include/speex/speex_types.h \
+  ../include/speex/speex_config_types.h arch.h fixed_generic.h ltp.h \
+  quant_lsp.h cb_search.h sb_celp.h nb_celp.h \
+  ../include/speex/speex_callbacks.h ../include/speex/speex.h vbr.h \
+  filters.h \
+  /opt/uClinux/bfin-uclinux/bfin-uclinux/runtime/usr/include/math.h \
+  /opt/uClinux/bfin-uclinux/lib/gcc/bfin-uclinux/4.3.5/include-fixed/features.h \
+  /opt/uClinux/bfin-uclinux/bfin-uclinux/runtime/usr/include/bits/uClibc_config.h \
+  /opt/uClinux/bfin-uclinux/bfin-uclinux/runtime/usr/include/bits/uClibc_arch_features.h \
+  /opt/uClinux/bfin-uclinux/bfin-uclinux/runtime/usr/include/sys/cdefs.h \
+  /opt/uClinux/bfin-uclinux/bfin-uclinux/runtime/usr/include/bits/huge_val.h \
+  /opt/uClinux/bfin-uclinux/bfin-uclinux/runtime/usr/include/bits/mathdef.h \
+  /opt/uClinux/bfin-uclinux/bfin-uclinux/runtime/usr/include/bits/mathcalls.h
+
+../config.h:
+
+modes.h:
+
+../include/speex/speex.h:
+
+../include/speex/speex_bits.h:
+
+../include/speex/speex_types.h:
+
+../include/speex/speex_config_types.h:
+
+arch.h:
+
+fixed_generic.h:
+
+ltp.h:
+
+quant_lsp.h:
+
+cb_search.h:
+
+sb_celp.h:
+
+nb_celp.h:
+
+../include/speex/speex_callbacks.h:
+
+../include/speex/speex.h:
+
+vbr.h:
+
+filters.h:
+
+/opt/uClinux/bfin-uclinux/bfin-uclinux/runtime/usr/include/math.h:
+
+/opt/uClinux/bfin-uclinux/lib/gcc/bfin-uclinux/4.3.5/include-fixed/features.h:
+
+/opt/uClinux/bfin-uclinux/bfin-uclinux/runtime/usr/include/bits/uClibc_config.h:
+
+/opt/uClinux/bfin-uclinux/bfin-uclinux/runtime/usr/include/bits/uClibc_arch_features.h:
+
+/opt/uClinux/bfin-uclinux/bfin-uclinux/runtime/usr/include/sys/cdefs.h:
+
+/opt/uClinux/bfin-uclinux/bfin-uclinux/runtime/usr/include/bits/huge_val.h:
+
+/opt/uClinux/bfin-uclinux/bfin-uclinux/runtime/usr/include/bits/mathdef.h:
+
+/opt/uClinux/bfin-uclinux/bfin-uclinux/runtime/usr/include/bits/mathcalls.h:

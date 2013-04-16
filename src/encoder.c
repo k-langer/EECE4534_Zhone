@@ -1,6 +1,8 @@
 #include "chunk.h"
 #include "commonTypes.h"
 #include "encoder.h"
+#include <stdlib.h>
+#include <stdio.h>
 
 /*Encoder init configures the internal
   state of the encoder. Takes a blank
@@ -9,11 +11,9 @@
 */
 int encoder_init(encoder_t* state)
 {
-    state->status = speex_encoder_init(&speex_nb_mode);
     int quality = QUALITY;
-    speex_encoder_ctl(state->status, SPEEX_SET_QUALITY , &quality); 
 
-    state->input = malloc(FRAME_SIZE*sizeof(float) );   
+    state->input = malloc(FRAME_SIZE*sizeof(short) );   
     
     speex_bits_init(&(state->bits));
     
@@ -21,7 +21,7 @@ int encoder_init(encoder_t* state)
     speex_encoder_ctl((void*)state->status, SPEEX_SET_QUALITY , &quality);
     //TODO replace dummyOut with a look-up table   
     char * dummyOut = malloc(FRAME_SIZE);
-    speex_encode((void*)state->status, state->input, &(state->bits));
+    speex_encode_int((void*)state->status, state->input, &(state->bits));
     state->nbBytes = speex_bits_write(&(state->bits), dummyOut, FRAME_SIZE);
     free(dummyOut);
     state->outputSize = CHUNK_SIZE/FRAME_SIZE * state->nbBytes;
@@ -32,17 +32,16 @@ int encoder_init(encoder_t* state)
   encodes it, and fills the location of the 
   encoded chunk. Returns pass or fail. 
 */
-int encoder_encode( encoder_t* pThis, chunk_t* pAudioChunk, chunk_t* pDataChunk)
-{
+int encoder_encode( encoder_t* pThis, chunk_t* pAudioChunk, chunk_t* pDataChunk) {
     int i;
     int j;
     char* out = (char*)pDataChunk->u16_buff;
     for (i = 0; i < CHUNK_SIZE/FRAME_SIZE; i++) {
         for (j = 0; j < FRAME_SIZE; j++) {
-            pThis->input[j] = (float)pAudioChunk->s16_buff[j+i*pThis->nbBytes];
+            pThis->input[j] = pAudioChunk->s16_buff[j+i*FRAME_SIZE];
         }   
         speex_bits_reset(&(pThis->bits));
-        speex_encode(pThis->status, pThis->input, &(pThis->bits));
+        speex_encode_int(pThis->status, pThis->input, &(pThis->bits));
         speex_bits_write(&(pThis->bits), out + i*pThis->nbBytes , pThis->nbBytes);
     }
     pDataChunk->bytesUsed = pThis->nbBytes*CHUNK_SIZE/FRAME_SIZE;
