@@ -8,10 +8,15 @@
 # set CC to cross compiler 
 CC = bfin-elf-gcc
 
+
 # -- Compile Flags
 CFLAGS = -Wall -specs=$(TLL6527M_C_DIR)/common/inc/spec/tll6527m 
 # add debug flag 
 CFLAGS += -g -O0
+
+# -- Speex
+SPEEX=../speex/libspeex/*.o
+INC_SPEEX=-I ../speex/include
 
 
 # -- Include Path
@@ -21,6 +26,8 @@ INC_PATH = -I ../inc
 OBJS =  main.o \
 		audioRx.o \
 		audioTx.o \
+        encoder.o \
+        decoder.o 
 		
 # --- Libraries 	
 LIBS     = -ltll6527mC   
@@ -43,11 +50,11 @@ all: $(TARGET)
 
 # link final binary
 $(TARGET):$(OBJS) 
-	$(CC) $(INC_PATH) $(LIB_PATH) $(CFLAGS) -o $@ $^ $(LIBS) $(LDFLAGS)
+	$(CC) $(INC_PATH) $(INC_SPEEX) $(SPEEX) $(LIB_PATH) $(CFLAGS) -o $@ $^ $(LIBS) $(LDFLAGS)
 
 # pattern rule for compiling into object files
 .c.o:
-	$(CC)  $(INC_PATH) -g -c $(CFLAGS)  -o $@ $<  
+	$(CC) $(INC_SPEEX) $(INC_PATH) -g -c $(CFLAGS)  -o $@ $<  
 
 # --- Clean	
 clean: 
