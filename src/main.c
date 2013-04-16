@@ -6,7 +6,7 @@
 #include <tll6527_core_timer.h>
 #include "startup.h"
 #include "tll_sport.h"
-#include "audioTx.h"
+/*#include "audioTx.h"
 #include "audioRx.h"
 #include "bufferPool.h"
 #include "isrDisp.h"
@@ -17,9 +17,7 @@ isrDisp_t isrDisp;
 chunk_t* testChunk;
 audioRx_t testInput;
 audioTx_t testOutput;
-int x;
-int y;
-
+*/
 #define I2C_CLOCK   (400*_1KHZ)
 
 //audio tx/rx testing
@@ -44,7 +42,7 @@ int main(void)
 
     printf("hello world\n");
 
-    bufferPool_init( &bufferPool );
+  /*  bufferPool_init( &bufferPool );
     isrDisp_init( &isrDisp );
     chunk_init( testChunk );
 
@@ -67,6 +65,6 @@ int main(void)
 			audioTx_put( &testOutput, testChunk );
 		}
     }
-
+*/
     return 0;
 }

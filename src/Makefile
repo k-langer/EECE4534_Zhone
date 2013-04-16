@@ -20,6 +20,7 @@ INC_SPEEX = -I ../speex/include
 
 # -- Objects 
 OBJS =  zhone.o \
+	main.o \
 	receive_path.o \
 	transfer_path.o \
 	phonebook.o \
@@ -27,6 +28,11 @@ OBJS =  zhone.o \
 	decoder.o \
 	audioTx.o \
 	wc.o \
+	display.o \
+	xbee.o \
+	wire.o \
+	uartRx.o \
+	uartTx.o \
 	ui.o \
 	audioRx.o
 

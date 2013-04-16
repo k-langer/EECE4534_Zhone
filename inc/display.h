@@ -1,7 +1,8 @@
 #ifndef _DISPLAY_H_
 #define _DISPLAY_H_
 
-#include "commonTypes.h"
+#include "commonTypes.h" 
+#include "phonebook.h" 
 
 /***
     Display
@@ -21,7 +22,7 @@
 	returns PASS on success or FAIL on failure 
 ***/
 
-return_value_t display_init();
+void display_init();
 
 /***
 
@@ -31,7 +32,7 @@ return_value_t display_init();
 	Turns on LEDs 0 and 7 
 ***/
 
-return_value_t display_mainMenu(); 
+void display_mainMenu(); 
 
 /***
 	receiveMenu
@@ -40,9 +41,9 @@ return_value_t display_mainMenu();
 	User 1 corresponds to the leftmost LED, User 2 corresponds to the rightmost LED
 ***/
 
-return_value_t display_receiveMenu1();
+void display_receiveMenu1();
 
-return_value_t display_receiveMenu2();
+void display_receiveMenu2();
 
 
 /***
@@ -51,7 +52,7 @@ return_value_t display_receiveMenu2();
 	Blinks all the LEDs on and off to indicate that you are making a call 	
 ***/
 
-return_value_t display_makingCallMenu();
+void display_makingCallMenu();
 
 /***
 	inCallMenu
@@ -59,7 +60,7 @@ return_value_t display_makingCallMenu();
 	Hold all of the LEDs on to indicate that you are in a call 
 ***/
 
-return_value_t display_inCallMenu(); 
+void display_inCallMenu(); 
 
 
 /***
