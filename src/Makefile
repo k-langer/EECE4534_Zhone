@@ -27,7 +27,18 @@ OBJS =  main.o \
 		audioRx.o \
 		audioTx.o \
         encoder.o \
-        decoder.o 
+        decoder.o \
+		xbee.o \
+		wire.o \
+		uartTx.o \
+		uartRx.o \
+		wc.o \
+		ui.o \
+		display.o \
+		receive_path.o \
+		transfer_path.o \
+		phonebook.o \
+		zhone.o
 		
 # --- Libraries 	
 LIBS     = -ltll6527mC   
