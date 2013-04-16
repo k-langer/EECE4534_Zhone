@@ -34,13 +34,15 @@
  *
  * @return void
  */
-void audioRx_dmaConfig(chunk_t *pchunk)
+void audioRx_dmaConfig( audioRx_t *pThis, chunk_t *pchunk)
 {
     DISABLE_DMA(*pDMA3_CONFIG);
-    *pDMA3_START_ADDR   = &pchunk->u16_buff[0];
-    *pDMA3_X_COUNT      = pchunk->bytesMax/2;  // 16 bit data so we change the stride and count
-    *pDMA3_X_MODIFY     = 2;
-    ENABLE_DMA(*pDMA3_CONFIG);
+    if ( pThis->running ) {
+		*pDMA3_START_ADDR   = &pchunk->u16_buff[0];
+		*pDMA3_X_COUNT      = pchunk->bytesMax/2;  // 16 bit data so we change the stride and count
+		*pDMA3_X_MODIFY     = 2;
+		ENABLE_DMA(*pDMA3_CONFIG);
+    }
 }
 
 
@@ -77,11 +79,12 @@ int audioRx_init(audioRx_t *pThis, bufferPool_t *pBuffP,
      /* Read, 1-D, interrupt enabled, Memory write operation, 16 bit transfer,
       * Auto buffer
       */
-    *pDMA3_CONFIG = WNR | WDSIZE_16 | DI_EN | DI_EN;
+    *pDMA3_CONFIG = WNR | WDSIZE_16 | DI_EN | FLOW_AUTO;
 
     /**
      * Register the interrupt handler
      */
+
     isrDisp_registerCallback(pIsrDisp, ISR_DMA3_SPORT0_RX, audioRx_isr, pThis);
     
     printf("[ARX]: RX init complete\n");
@@ -112,7 +115,8 @@ int audioRx_start(audioRx_t *pThis)
          return FAIL;
      }
      
-     audioRx_dmaConfig(pThis->pPending);    
+     pThis->running = 1;
+     audioRx_dmaConfig(pThis, pThis->pPending);
      
      // enable the audio transfer 
      ENABLE_SPORT0_RX();
@@ -146,13 +150,13 @@ void audioRx_isr(void *pThisArg)
         if ( FAIL == queue_put(&pThis->queue, pThis->pPending) ) {
             
             // reuse the same buffer and overwrite last samples 
-            audioRx_dmaConfig(pThis->pPending);
+            audioRx_dmaConfig(pThis, pThis->pPending);
             
             //printf("[INT]: RX packet dropped\n");
         } else {
             
             if ( PASS == bufferPool_acquire(pThis->pBuffP, &pThis->pPending ) ) {
-                audioRx_dmaConfig(pThis->pPending);
+                audioRx_dmaConfig(pThis, pThis->pPending);
             } else {
                 printf("Buffer pool empty!\n");
             }
@@ -180,14 +184,11 @@ void audioRx_isr(void *pThisArg)
 int audioRx_get(audioRx_t *pThis, chunk_t *pChunk)
 {
     chunk_t                  *chunk_rx;
-    int                         count                   = 0;
     
     /* Block till a chunk arrives on the rx queue */
     while( queue_is_empty(&pThis->queue) ) {
-        powerMode_change(PWR_ACTIVE);
-        asm("idle;");
+    	asm("nop;");
     }
-    powerMode_change(PWR_FULL_ON);
     
     queue_get(&pThis->queue, (void**)&chunk_rx);
 
@@ -197,7 +198,6 @@ int audioRx_get(audioRx_t *pThis, chunk_t *pChunk)
         return FAIL;
     }
     
-
     return PASS;
 }
 
@@ -225,4 +225,8 @@ int audioRx_getNbNc(audioRx_t *pThis, chunk_t **ppChunk)
     }
 }
 
+int audioRx_stop( audioRx_t *pThis ) {
+	pThis->running = 0;
 
+	return PASS;
+}

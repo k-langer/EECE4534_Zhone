@@ -42,6 +42,7 @@ typedef struct {
   queue_t        queue;  /* queue for received buffers */
   chunk_t        *pPending; /* pointer to pending chunk just in receiving */
   bufferPool_t   *pBuffP; /* pointer to buffer pool */
+  int			running; /* is DMA running */
 } audioRx_t;
 
 
@@ -120,4 +121,11 @@ int audioRx_get(audioRx_t *pThis, chunk_t *pChunk);
  * Negative value on failure.
  */
 int audioRx_getNbNc(audioRx_t *pThis, chunk_t **pChunk);
+
+/** audio rx stop
+ *
+ *
+ */
+int audioRx_stop( audioRx_t *pThis );
+
 #endif
