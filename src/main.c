@@ -36,11 +36,11 @@ int main(void)
 
     /* FPGA setup function to configure FPGA, make sure the FPGA configuration
     binary data is loaded in to SDRAM at "FPGA_DATA_START_ADDR" */
-    status = fpga_setup(); //returns 0 if successful and -1 if failed
-    if (status) {
-        printf("\r\n FPGA Setup Failed");
-        return -1;
-    }
+//    status = fpga_setup(); //returns 0 if successful and -1 if failed
+//    if (status) {
+//        printf("\r\n FPGA Setup Failed");
+//        return -1;
+//    }
 
     printf("hello world\n");
 
@@ -54,19 +54,23 @@ int main(void)
 		printf("SSM2602 init failed\r\n");
 		return status;
 	}
-
+    encoder_t encoder; 
+    decoder_t decoder;
     audioTx_init( &testOutput, &bufferPool, &isrDisp );
     audioRx_init( &testInput, &bufferPool, &isrDisp );
-    //encoder_init( &encoder );
-    //decoder_init( &decoder, encoder.nbBytes );
+    encoder_init( &encoder );
+    decoder_init( &decoder, 0 );
 
     audioRx_start( &testInput );
     audioTx_start( &testOutput );
 
+    chunk_t* dataChunk = malloc(sizeof(chunk_t));
+    //chunk_t* readyChunk = malloc(sizeof(chunk_t));
+
     while( 1 ) {
     	if ( audioRx_getNbNc( &testInput, &testChunk) == PASS ) {
-    		//encoder_encode( &encoder, testChunk, dataChunk );
-    		//decoder_decode( &decoder, dataChunk, readyChunk );
+    		encoder_encode( &encoder, testChunk, dataChunk );
+    		decoder_decode( &decoder, dataChunk, testChunk );
             audioTx_put( &testOutput, testChunk );
             bufferPool_release( &bufferPool, testChunk );
 		}
