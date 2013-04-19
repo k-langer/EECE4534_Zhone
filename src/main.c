@@ -92,7 +92,6 @@ int main(void)
     *pPORTFIO_DIR &= ~(0x8000);
 
     chunk_t* dataChunk = malloc(sizeof(chunk_t));
-    //chunk_t* readyChunk = malloc(sizeof(chunk_t));
 
     while( 1 ) {
     	if ( audioRx_getNbNc( &testInput, &testChunk) == PASS ) {
