@@ -17,8 +17,12 @@
 bufferPool_t bufferPool;
 isrDisp_t isrDisp;
 chunk_t* testChunk;
+chunk_t* dataChunk;
+chunk_t* readyChunk;
 audioRx_t testInput;
 audioTx_t testOutput;
+encoder_t encoder;
+decoder_t decoder;
 
 #define I2C_CLOCK   (400*_1KHZ)
 
@@ -57,17 +61,20 @@ int main(void)
 
     audioTx_init( &testOutput, &bufferPool, &isrDisp );
     audioRx_init( &testInput, &bufferPool, &isrDisp );
-    //encoder_init( &encoder );
-    //decoder_init( &decoder, encoder.nbBytes );
+    encoder_init( &encoder );
+    decoder_init( &decoder, encoder.nbBytes );
 
     audioRx_start( &testInput );
     audioTx_start( &testOutput );
 
+    bufferPool_acquire( &bufferPool, &dataChunk );
+    bufferPool_acquire( &bufferPool, &readyChunk );
+
     while( 1 ) {
     	if ( audioRx_getNbNc( &testInput, &testChunk) == PASS ) {
-    		//encoder_encode( &encoder, testChunk, dataChunk );
-    		//decoder_decode( &decoder, dataChunk, readyChunk );
-            audioTx_put( &testOutput, testChunk );
+    		encoder_encode( &encoder, testChunk, dataChunk );
+    		decoder_decode( &decoder, dataChunk, readyChunk );
+            audioTx_put( &testOutput, readyChunk );
             bufferPool_release( &bufferPool, testChunk );
 		}
     }
