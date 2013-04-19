@@ -37,12 +37,10 @@
 void audioRx_dmaConfig( audioRx_t *pThis, chunk_t *pchunk)
 {
     DISABLE_DMA(*pDMA3_CONFIG);
-    if ( pThis->running ) {
-		*pDMA3_START_ADDR   = &pchunk->u16_buff[0];
-		*pDMA3_X_COUNT      = pchunk->bytesMax/2;  // 16 bit data so we change the stride and count
-		*pDMA3_X_MODIFY     = 2;
-		ENABLE_DMA(*pDMA3_CONFIG);
-    }
+	*pDMA3_START_ADDR   = &pchunk->u16_buff[0];
+	*pDMA3_X_COUNT      = pchunk->bytesMax/2;  // 16 bit data so we change the stride and count
+	*pDMA3_X_MODIFY     = 2;
+	ENABLE_DMA(*pDMA3_CONFIG);
 }
 
 
@@ -115,7 +113,6 @@ int audioRx_start(audioRx_t *pThis)
          return FAIL;
      }
      
-     pThis->running = 1;
      audioRx_dmaConfig(pThis, pThis->pPending);
      
      // enable the audio transfer 
@@ -226,7 +223,5 @@ int audioRx_getNbNc(audioRx_t *pThis, chunk_t **ppChunk)
 }
 
 int audioRx_stop( audioRx_t *pThis ) {
-	pThis->running = 0;
-
 	return PASS;
 }

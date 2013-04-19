@@ -72,8 +72,8 @@ int main(void)
 
     while( 1 ) {
     	if ( audioRx_getNbNc( &testInput, &testChunk) == PASS ) {
-    		encoder_encode( &encoder, testChunk, dataChunk );
-    		decoder_decode( &decoder, dataChunk, readyChunk );
+    		//encoder_encode( &encoder, testChunk, dataChunk );
+    		//decoder_decode( &decoder, dataChunk, readyChunk );
             audioTx_put( &testOutput, readyChunk );
 		}
     }
