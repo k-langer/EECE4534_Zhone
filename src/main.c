@@ -65,7 +65,6 @@ int main(void)
     audioTx_start( &testOutput );
 
     chunk_t* dataChunk = malloc(sizeof(chunk_t));
-    //chunk_t* readyChunk = malloc(sizeof(chunk_t));
 
     while( 1 ) {
     	if ( audioRx_getNbNc( &testInput, &testChunk) == PASS ) {
