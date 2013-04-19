@@ -64,7 +64,8 @@ int main(void)
 		printf("SSM2602 init failed\r\n");
 		return status;
 	}
-
+    encoder_t encoder; 
+    decoder_t decoder;
     audioTx_init( &testOutput, &bufferPool, &isrDisp );
     audioRx_init( &testInput, &bufferPool, &isrDisp );
     encoder_init( &encoder );
@@ -89,6 +90,9 @@ int main(void)
     *pPORTF_MUX |= 0x0800;
     *pPORTFIO_DIR |= 0x4000;
     *pPORTFIO_DIR &= ~(0x8000);
+
+    chunk_t* dataChunk = malloc(sizeof(chunk_t));
+    //chunk_t* readyChunk = malloc(sizeof(chunk_t));
 
     while( 1 ) {
     	if ( audioRx_getNbNc( &testInput, &testChunk) == PASS ) {
