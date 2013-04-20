@@ -64,50 +64,36 @@ int main(void)
 		printf("SSM2602 init failed\r\n");
 		return status;
 	}
-    encoder_t encoder; 
-    decoder_t decoder;
+
     audioTx_init( &testOutput, &bufferPool, &isrDisp );
     audioRx_init( &testInput, &bufferPool, &isrDisp );
     encoder_init( &encoder );
-    decoder_init( &decoder, encoder.nbBytes );
-    Wc_Init( &wc, &bufferPool, &isrDisp );
+    decoder_init( &decoder, 0 );
+    //Wc_Init( &wc, &bufferPool, &isrDisp );
 
     audioRx_start( &testInput );
     audioTx_start( &testOutput );
     //Wc_Start( &wc );
 
-    //bf52x_uart_settings settings = {
-    //    .parenable = 0,
-    //    .parity = 0,
-    //    .rxtx_baud = BF52X_BAUD_RATE_9600
-    //};    
-    //      
-    //bf52x_uart_deinit();
-    //bf52x_uart_init(&settings); 
-
-    *pPORTF_FER |= 0xc000;
-    *pPORTF_MUX &= ~0x0400;
-    *pPORTF_MUX |= 0x0800;
-    *pPORTFIO_DIR |= 0x4000;
-    *pPORTFIO_DIR &= ~(0x8000);
-
-    chunk_t* dataChunk = malloc(sizeof(chunk_t));
-
     while( 1 ) {
     	if ( audioRx_getNbNc( &testInput, &testChunk) == PASS ) {
+
             bufferPool_acquire( &bufferPool, &dataChunk );
     		encoder_encode( &encoder, testChunk, dataChunk );
             bufferPool_release( &bufferPool, testChunk );
+
             //if (FAIL == Wc_Send( &wc, dataChunk ))
             //    break;
 
             //Wc_Start( &wc );
-            //bufferPool_acquire( &bufferPool, &readyChunk );
             //while (FAIL == Wc_Receive( &wc, readyChunk ));
             //Wc_Stop( &wc );
             //bufferPool_acquire( &bufferPool, &dataChunk );
+
+            bufferPool_acquire( &bufferPool, &readyChunk );
     		decoder_decode( &decoder, dataChunk, readyChunk );
             bufferPool_release( &bufferPool, dataChunk );
+
             audioTx_put( &testOutput, readyChunk );
             bufferPool_release( &bufferPool, readyChunk );
 		}

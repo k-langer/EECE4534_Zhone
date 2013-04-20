@@ -106,9 +106,9 @@ int audioTx_start(audioTx_t *pThis)
 
 void audioTx_dmaStop( audioTx_t *pThis )
 {
-    pThis->running = 0;
+    //pThis->running = 0;
 
-    DISABLE_DMA(*pDMA4_CONFIG);
+    //DISABLE_DMA(*pDMA4_CONFIG);
 }
 
 /** audio tx isr  (to be called from dispatcher) 
@@ -140,12 +140,13 @@ void audioTx_isr(void *pThisArg)
             bufferPool_release(pThis->pBuffP, pThis->pPending);
             /* register new chunk as pending */
             pThis->pPending = pchunk;
-            
-            // config DMA either with new chunk (if there was one), or with old chunk on empty Q
-            audioTx_dmaConfig(pThis->pPending);        
         } else {
             audioTx_dmaStop(pThis);
         }
+        
+        // config DMA either with new chunk (if there was one), or with old chunk on empty Q
+        audioTx_dmaConfig(pThis->pPending);        
+
         *pDMA4_IRQ_STATUS  |= 0x0001;     // Clear the interrupt
     }
 }
