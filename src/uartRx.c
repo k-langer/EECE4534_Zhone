@@ -106,7 +106,15 @@ int uartRx_start(uartRx_t *pThis)
      return PASS;                                         
 }
 
+void uartRx_dmaStop(void) {
+	// stop DMA it might otherwise bombard us with interrupts
+    DISABLE_DMA(*pDMA10_CONFIG);
 
+    // turn off the TX ISR as we do not use the DMA anymore
+    *pUART1_IER &= ~ERBFI;
+
+    return;
+}
 
 /** uartRx_isr
 

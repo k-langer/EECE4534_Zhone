@@ -104,7 +104,12 @@ int audioTx_start(audioTx_t *pThis)
     return PASS;   
 }
 
+void audioTx_dmaStop( audioTx_t *pThis )
+{
+    pThis->running = 0;
 
+    DISABLE_DMA(*pDMA4_CONFIG);
+}
 
 /** audio tx isr  (to be called from dispatcher) 
  *   - get chunk from tx queue
@@ -131,17 +136,17 @@ void audioTx_isr(void *pThisArg)
          */
          /* fist attempt to get new chunk */
         if(PASS == queue_get(&pThis->queue, (void **)&pchunk) ) {
-                /* release old chunk on success */
-               bufferPool_release(pThis->pBuffP, pThis->pPending);
-               /* register new chunk as pending */
-               pThis->pPending = pchunk;
+            /* release old chunk on success */
+            bufferPool_release(pThis->pBuffP, pThis->pPending);
+            /* register new chunk as pending */
+            pThis->pPending = pchunk;
+            
+            // config DMA either with new chunk (if there was one), or with old chunk on empty Q
+            audioTx_dmaConfig(pThis->pPending);        
         } else {
-            //printf("TX Q Emtpy\n");
+            audioTx_dmaStop(pThis);
         }
         *pDMA4_IRQ_STATUS  |= 0x0001;     // Clear the interrupt
-        
-        // config DMA either with new chunk (if there was one), or with old chunk on empty Q
-        audioTx_dmaConfig(pThis->pPending);        
     }
 }
 
@@ -190,7 +195,7 @@ int audioTx_put(audioTx_t *pThis, chunk_t *pChunk)
             ENABLE_SPORT0_TX();  
         } else { 
             /* DMA already running add chunk to queue */
-            if ( PASS != queue_put(&pThis->queue, pchunk_temp) ) {
+            if ( FAIL == queue_put(&pThis->queue, pchunk_temp) ) {
                 
                 // return chunk to pool if queue is full, effectively dropping the chunk
                 bufferPool_release(pThis->pBuffP, pchunk_temp);

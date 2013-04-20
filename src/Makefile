@@ -14,6 +14,8 @@ CFLAGS = -Wall -specs=$(TLL6527M_C_DIR)/common/inc/spec/tll6527m
 # add debug flag 
 CFLAGS += -g -O0
 
+CFLAGS += -DWIRE
+
 # -- Speex
 SPEEX=../speex/libspeex/*.o
 INC_SPEEX=-I ../speex/include

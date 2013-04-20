@@ -81,6 +81,8 @@ int Wc_Start( wc_t *pThis )
  */
 int Wc_Stop( wc_t *pThis )
 {
+    uartRx_dmaStop();
+
     return PASS;
 }
 
