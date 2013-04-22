@@ -3,6 +3,9 @@
 
 #include "commonTypes.h"
 
+#define SHIFT 8
+#define SAMPLE_DIV 4
+#define CHUNK_SIZE 1280
 typedef char encoder_t;
 
 /*

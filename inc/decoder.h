@@ -4,6 +4,9 @@
 #include "commonTypes.h"
 
 typedef char decoder_t;
+#define SHIFT 8
+#define SAMPLE_DIV 4
+#define CHUNK_SIZE 1280
 
 /*
 decoder_init must be run before decoder_decode.
