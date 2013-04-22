@@ -88,7 +88,7 @@ int audioTx_init(audioTx_t *pThis, bufferPool_t *pBuffP,
 
 
 /** start audio tx
- *   - empthy for now
+ *   - empty for now
  * Parameters:
  * @param pThis  pointer to own object
  *
