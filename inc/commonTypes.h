@@ -3,7 +3,7 @@
 
 #include "tll_common.h"
 #define SHIFT 8
-#define SAMPLE_DIV 8
+#define SAMPLE_DIV 4
 #define CHUNK_SIZE 1280
 /***
     Common Types
