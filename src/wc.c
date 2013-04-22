@@ -24,6 +24,8 @@
 #include "xbee.h"
 #endif
 
+bufferPool_t miniPool;
+
 /** Initializes the wireless communicator
  *
  * @param pThis     the wireless communicator structure
@@ -36,27 +38,14 @@ int Wc_Init( wc_t *pThis, bufferPool_t *pBufPool, isrDisp_t *pIsrDisp )
 {
     pThis->pIsr     = pIsrDisp;
     pThis->pBufPool = pBufPool;
+    bufferPool_init( &miniPool );
+    pThis->pMiniPool = &miniPool;
 
-    bf52x_uart_settings settings = {
-        .parenable = 0,
-        .parity = 0,
-        .rxtx_baud = BF52X_BAUD_RATE_9600
-    };
-
-    bf52x_uart_deinit();
-    bf52x_uart_init(&settings); 
-
-    uartRx_init(&pThis->rx, pThis->pBufPool, pThis->pIsr);
-    uartTx_init(&pThis->tx, pThis->pBufPool, pThis->pIsr);
-
-    *pPORTF_FER |= 0xc000;
-    *pPORTF_MUX &= ~0x0400;
-    *pPORTF_MUX |= 0x0800;
-    *pPORTFIO_DIR |= 0x4000;
-    *pPORTFIO_DIR &= ~(0x8000);
+    uartRx_init(&pThis->rx, pThis->pMiniPool, pThis->pIsr);
+    uartTx_init(&pThis->tx, pThis->pMiniPool, pThis->pIsr);
 
 #if WIRE
-    Wire_Init(&pThis->wire, &pThis->rx, &pThis->tx, pThis->pBufPool);
+    Wire_Init(&pThis->wire, &pThis->rx, &pThis->tx, pThis->pMiniPool);
 #else
     Xbee_Init(&pThis->xbee, &pThis->rx, &pThis->tx, pThis->pBufPool);
 #endif
@@ -70,9 +59,22 @@ int Wc_Init( wc_t *pThis, bufferPool_t *pBufPool, isrDisp_t *pIsrDisp )
  */
 int Wc_Start( wc_t *pThis )
 {
-    uartRx_start(&pThis->rx);
+    bf52x_uart_settings settings = {
+        .parenable = 0,
+        .parity = 0,
+        .rxtx_baud = BF52X_BAUD_RATE_9600
+    };
 
-    return PASS;
+    bf52x_uart_deinit();
+    bf52x_uart_init(&settings); 
+
+    *pPORTF_FER |= 0xc000;
+    *pPORTF_MUX &= ~0x0400;
+    *pPORTF_MUX |= 0x0800;
+    *pPORTFIO_DIR |= 0x4000;
+    *pPORTFIO_DIR &= ~(0x8000);
+
+    return uartRx_start(&pThis->rx);
 }
 
 /** Stops the wireless communicator
@@ -82,6 +84,17 @@ int Wc_Start( wc_t *pThis )
 int Wc_Stop( wc_t *pThis )
 {
     uartRx_dmaStop();
+
+    bf52x_uart_settings settings = {
+        .parenable = 0,
+        .parity = 0,
+        .rxtx_baud = BF52X_BAUD_RATE_115200
+    };
+
+    bf52x_uart_deinit();
+    bf52x_uart_init(&settings); 
+
+    *pPORTF_FER &= ~0xc000;
 
     return PASS;
 }
@@ -150,19 +163,45 @@ int Wc_AcceptCall( wc_t *pThis )
 int Wc_Send( wc_t *pThis, chunk_t *pChunk )
 {
     int i;
-    int len = pChunk->bytesUsed;
-    for (i = len - 1; i >= 0; i--)
+    int len = (pChunk->bytesUsed <= 100) ? pChunk->bytesUsed : 100;
+    int status = 0;
+    chunk_t *new_chunk;
+
+    while (pChunk->bytesUsed)
     {
-        pChunk->u08_buff[i+1] = pChunk->u08_buff[i];
-    }
-    pChunk->u08_buff[0] = WC_DATA_BYTE;
-    pChunk->bytesUsed = 1 + len;
+        status = bufferPool_acquire(pThis->pMiniPool, &new_chunk);
+        if (FAIL == status)
+        {
+            break;
+        }
+
+        new_chunk->u08_buff[0] = WC_DATA_BYTE;
+        for (i = 0; i < len; i++)
+        {
+            new_chunk->u08_buff[i+1] = pChunk->u08_buff[i];
+        }
+        new_chunk->bytesUsed = 1 + len;
+
+        for (i = len; i < pChunk->bytesUsed; i++)
+        {
+            pChunk->u08_buff[i] = pChunk->u08_buff[i + len];
+        }
+
+        pChunk->bytesUsed -= len;
+        len = (pChunk->bytesUsed <= 100) ? pChunk->bytesUsed : 100;
 
 #if WIRE
-        return Wire_SendMessage(&pThis->wire, pChunk);
+        status = Wire_SendMessage(&pThis->wire, new_chunk);
 #else
-        return Xbee_SendTransmitMessage(&pThis->xbee, pThis->to, pChunk);
+        status = Xbee_SendTransmitMessage(&pThis->xbee, pThis->to, new_chunk);
 #endif
+        if (FAIL == status)
+        {
+            break;
+        }
+    }
+    bufferPool_release(pThis->pBufPool, pChunk);
+    return status;
 }
 
 /** Sends an end call message

@@ -51,6 +51,7 @@ int uartRx_init(uartRx_t *pThis, bufferPool_t *pBuffP,
     
     pThis->pPending = NULL;
     pThis->pBuffP = pBuffP;
+    pThis->state = UARTRX_WAITING;
     
     // init queue with 
     queue_init(&pThis->queue, UARTRX_QUEUE_DEPTH);
@@ -91,28 +92,32 @@ int uartRx_start(uartRx_t *pThis)
 	//printf("[UART RX]: uartRx_start: implemented\r\n");
 
     /* prime the system by getting the first buffer filled */
-     if ( FAIL == bufferPool_acquire(pThis->pBuffP, &pThis->pPending ) ) {
-         //printf("[UART_RX]: Failed to acquire buffer\r\n");
-         return FAIL;
-     }
-     
-     //uartRx_dmaConfig(pThis->pPending);
-     uartRx_dmaConfig(sramPending, 3);
-     
-     // enable the audio transfer
-     //printf("Enabled XBEE RX\r\n");
-     //ENABLE_DMA(*pDMA10_CONFIG);
-     
-     return PASS;                                         
+    if ( FAIL == bufferPool_acquire(pThis->pBuffP, &pThis->pPending ) ) {
+        //printf("[UART_RX]: Failed to acquire buffer\r\n");
+        return FAIL;
+    }
+    
+    //*pSIC_IMASK = 0x00000000;
+    //uartRx_dmaConfig(pThis->pPending);
+    uartRx_dmaConfig(sramPending, 3);
+    //*pSIC_IMASK = 0xffffffff;
+    
+    // enable the audio transfer
+    //printf("Enabled XBEE RX\r\n");
+    //ENABLE_DMA(*pDMA10_CONFIG);
+    
+    return PASS;                                         
 }
 
 void uartRx_dmaStop(void) {
+    //*pSIC_IMASK = 0x00000000;
 	// stop DMA it might otherwise bombard us with interrupts
     DISABLE_DMA(*pDMA10_CONFIG);
 
     // turn off the TX ISR as we do not use the DMA anymore
     *pUART1_IER &= ~ERBFI;
 
+    //*pSIC_IMASK = 0xffffffff;
     return;
 }
 
@@ -129,12 +134,19 @@ void uartRx_isr(void *pThisArg)
     // local pThis to avoid constant casting 
     uartRx_t *pThis  = (uartRx_t*) pThisArg;
     
-    *pIMEM_CONTROL &= ~(0x0002);
     if ( *pDMA10_IRQ_STATUS & 0x1 ) {
+
+        static int isr = 0;
+        isr++;
+        if (isr > 100)
+        {
+            asm("nop");
+            isr = 0;
+        }
 
         if (pThis->state == UARTRX_WAITING)
         {
-            unsigned short packet_length = sramPending[2] + 1;
+            unsigned short packet_length = ((sramPending[1] << 8) | sramPending[2]) + 1;
 
             if (0x7e == sramPending[0] && 0 < packet_length)
             {
@@ -157,23 +169,10 @@ void uartRx_isr(void *pThisArg)
                 sramPending[0] = 0x7e;    
                 uartRx_dmaConfig(sramPending+1, 2);
             }
-			//else
-			//{
-			//	pThis->pPending->bytesUsed = 3;
-			//	if ( FAIL == queue_put(&pThis->queue, pThis->pPending) ) {
-			//		// reuse the same buffer and overwrite last samples
-			//		//uartRx_dmaConfig(pThis->pPending);
-			//		uartRx_dmaConfig(sramPending);
-
-			//		//printf("[INT]: RX packet dropped\r\n");
-			//	} else {
-			//		if ( PASS == bufferPool_acquire(pThis->pBuffP, &pThis->pPending ) ) {
-			//			uartRx_dmaConfig(sramPending);
-			//		} else {
-			//			//printf("Buffer pool empty!\r\n");
-			//		}
-			//	}
-			//}
+            else
+            {
+                uartRx_dmaConfig(sramPending, 3);
+            }
         }
         else if (pThis->state == UARTRX_COMPLETING)
         {

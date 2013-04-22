@@ -68,34 +68,35 @@ int main(void)
     audioTx_init( &testOutput, &bufferPool, &isrDisp );
     audioRx_init( &testInput, &bufferPool, &isrDisp );
     encoder_init( &encoder );
-    decoder_init( &decoder, 0 );
-    //Wc_Init( &wc, &bufferPool, &isrDisp );
+    decoder_init( &decoder, encoder.nbBytes );
+    Wc_Init( &wc, &bufferPool, &isrDisp );
 
     audioRx_start( &testInput );
     audioTx_start( &testOutput );
-    //Wc_Start( &wc );
 
-    while( 1 ) {
-    	if ( audioRx_getNbNc( &testInput, &testChunk) == PASS ) {
+    while ( 1 )
+    {
+    	if ( audioRx_getNbNc( &testInput, &testChunk) == PASS )
+        {
 
             bufferPool_acquire( &bufferPool, &dataChunk );
     		encoder_encode( &encoder, testChunk, dataChunk );
             bufferPool_release( &bufferPool, testChunk );
-
-            //if (FAIL == Wc_Send( &wc, dataChunk ))
-            //    break;
-
+            //printf("Can Print!\n");
             //Wc_Start( &wc );
+            Wc_Send( &wc, dataChunk );
+
+            //bufferPool_acquire( &bufferPool, &readyChunk );
             //while (FAIL == Wc_Receive( &wc, readyChunk ));
             //Wc_Stop( &wc );
+            //printf("Can print again!\n");
             //bufferPool_acquire( &bufferPool, &dataChunk );
 
-            bufferPool_acquire( &bufferPool, &readyChunk );
-    		decoder_decode( &decoder, dataChunk, readyChunk );
-            bufferPool_release( &bufferPool, dataChunk );
+    		//decoder_decode( &decoder, readyChunk, dataChunk );
 
-            audioTx_put( &testOutput, readyChunk );
-            bufferPool_release( &bufferPool, readyChunk );
+            //audioTx_put( &testOutput, dataChunk );
+            //bufferPool_release( &bufferPool, readyChunk );
+            //bufferPool_release( &bufferPool, dataChunk );
 		}
     }
 
