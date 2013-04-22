@@ -136,14 +136,6 @@ void uartRx_isr(void *pThisArg)
     
     if ( *pDMA10_IRQ_STATUS & 0x1 ) {
 
-        static int isr = 0;
-        isr++;
-        if (isr > 100)
-        {
-            asm("nop");
-            isr = 0;
-        }
-
         if (pThis->state == UARTRX_WAITING)
         {
             unsigned short packet_length = ((sramPending[1] << 8) | sramPending[2]) + 1;

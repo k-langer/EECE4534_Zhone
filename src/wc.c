@@ -38,8 +38,8 @@ int Wc_Init( wc_t *pThis, bufferPool_t *pBufPool, isrDisp_t *pIsrDisp )
 {
     pThis->pIsr     = pIsrDisp;
     pThis->pBufPool = pBufPool;
-    bufferPool_init( &miniPool );
     pThis->pMiniPool = &miniPool;
+    bufferPool_init( pThis->pMiniPool );
 
     uartRx_init(&pThis->rx, pThis->pMiniPool, pThis->pIsr);
     uartTx_init(&pThis->tx, pThis->pMiniPool, pThis->pIsr);
@@ -163,15 +163,18 @@ int Wc_AcceptCall( wc_t *pThis )
 int Wc_Send( wc_t *pThis, chunk_t *pChunk )
 {
     int i;
-    int len = (pChunk->bytesUsed <= 100) ? pChunk->bytesUsed : 100;
+    int len;
     int status = 0;
     chunk_t *new_chunk;
 
     while (pChunk->bytesUsed)
     {
+        len = (pChunk->bytesUsed <= 100) ? pChunk->bytesUsed : 100;
+
         status = bufferPool_acquire(pThis->pMiniPool, &new_chunk);
         if (FAIL == status)
         {
+            printf("Mini Pool Fail!\n");
             break;
         }
 
@@ -188,7 +191,6 @@ int Wc_Send( wc_t *pThis, chunk_t *pChunk )
         }
 
         pChunk->bytesUsed -= len;
-        len = (pChunk->bytesUsed <= 100) ? pChunk->bytesUsed : 100;
 
 #if WIRE
         status = Wire_SendMessage(&pThis->wire, new_chunk);
