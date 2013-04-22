@@ -2,9 +2,6 @@
 #define COMMONTYPES_H
 
 #include "tll_common.h"
-#define SHIFT 8
-#define SAMPLE_DIV 8
-#define CHUNK_SIZE 1280
 /***
     Common Types
         -header file containing any typedefs we decide to create for clearer code

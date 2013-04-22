@@ -11,6 +11,7 @@ decoded chunk
 
 int decoder_init(decoder_t* state, int nbBytes)
 {
+    printf("[INIT] decoder BIT: %d RATE: %d\n",SHIFT,SAMPLE_DIV);
     state = NULL;
     return PASS;
 }
@@ -21,7 +22,7 @@ int decoder_decode(decoder_t* pThis, chunk_t* pDataChunk, chunk_t* pAudioChunk) 
     int offset = 0;
     for (i=0; i < pDataChunk->bytesUsed; i++) {
         for ( place = 0; place < SAMPLE_DIV; place++) {
-            pAudioChunk->u16_buff[place+offset] = ((unsigned short) pDataChunk->u08_buff[i]) << SHIFT;
+            pAudioChunk->s16_buff[place+offset] = ((signed short) pDataChunk->s08_buff[i]) << SHIFT;
         }
         offset+=SAMPLE_DIV;
     }

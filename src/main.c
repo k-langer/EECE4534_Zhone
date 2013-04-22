@@ -19,7 +19,7 @@ isrDisp_t isrDisp;
 chunk_t* testChunk;
 audioRx_t testInput;
 audioTx_t testOutput;
-
+chunk_t* dataChunk; 
 #define I2C_CLOCK   (400*_1KHZ)
 
 //audio tx/rx testing
@@ -36,11 +36,11 @@ int main(void)
 
     /* FPGA setup function to configure FPGA, make sure the FPGA configuration
     binary data is loaded in to SDRAM at "FPGA_DATA_START_ADDR" */
-//    status = fpga_setup(); //returns 0 if successful and -1 if failed
-//    if (status) {
-//        printf("\r\n FPGA Setup Failed");
-//        return -1;
-//    }
+    status = fpga_setup(); //returns 0 if successful and -1 if failed
+    if (status) {
+        printf("\r\n FPGA Setup Failed");
+        return -1;
+    }
 
     printf("hello world\n");
 
@@ -64,15 +64,17 @@ int main(void)
     audioRx_start( &testInput );
     audioTx_start( &testOutput );
 
-    chunk_t* dataChunk = malloc(sizeof(chunk_t));
-
+    //chunk_t* dataChunk = malloc(sizeof(chunk_t)); 
+    chunk_init(dataChunk); 
     while( 1 ) {
     	if ( audioRx_getNbNc( &testInput, &testChunk) == PASS ) {
-    		encoder_encode( &encoder, testChunk, dataChunk );
-    		decoder_decode( &decoder, dataChunk, testChunk );
+            encoder_encode( &encoder, testChunk, dataChunk ); 
+            bufferPool_release( &bufferPool, testChunk ); 
+            bufferPool_acquire(&bufferPool, testChunk );
+    		decoder_decode( &decoder, dataChunk, testChunk ); 
             audioTx_put( &testOutput, testChunk );
             bufferPool_release( &bufferPool, testChunk );
-		}
+        }
     }
 
     return 0;

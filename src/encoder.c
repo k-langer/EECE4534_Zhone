@@ -11,6 +11,7 @@ returns pass/fail.
 */
 int encoder_init(encoder_t* state)
 {
+    printf("[INIT] encoder BIT: %d RATE: %d\n",SHIFT,SAMPLE_DIV);
     state = NULL;
     return PASS;
 }
@@ -23,7 +24,7 @@ int encoder_encode( encoder_t* pThis, chunk_t* pAudioChunk, chunk_t* pDataChunk)
     int i;
     int count = 0;
     for (i=0; i < CHUNK_SIZE; i+=SAMPLE_DIV) {
-        pDataChunk->u08_buff[count] = (unsigned char) (pAudioChunk->u16_buff[i] >> SHIFT);
+        pDataChunk->s08_buff[count] = (signed char) (pAudioChunk->s16_buff[i] >> SHIFT);
         count++;
     }
     pDataChunk->bytesUsed = count;
