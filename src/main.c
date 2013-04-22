@@ -68,8 +68,8 @@ int main(void)
     audioTx_init( &testOutput, &bufferPool, &isrDisp );
     audioRx_init( &testInput, &bufferPool, &isrDisp );
     encoder_init( &encoder );
-    decoder_init( &decoder, encoder.nbBytes );
-    Wc_Init( &wc, &bufferPool, &isrDisp );
+    decoder_init( &decoder, 0 );
+    //Wc_Init( &wc, &bufferPool, &isrDisp );
 
     audioRx_start( &testInput );
     audioTx_start( &testOutput );

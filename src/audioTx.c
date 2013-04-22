@@ -36,7 +36,7 @@ void audioTx_dmaConfig(chunk_t *pchunk)
 {
     DISABLE_DMA(*pDMA4_CONFIG);
     *pDMA4_START_ADDR   = &pchunk->u16_buff[0]; /* set the start address */
-    *pDMA4_X_COUNT      = pchunk->bytesMax/2;  // 16 bit data so we change the stride and count
+    *pDMA4_X_COUNT      = pchunk->bytesUsed/2;  // 16 bit data so we change the stride and count
     *pDMA4_X_MODIFY     = 2;  /* the increment count */
     ENABLE_DMA(*pDMA4_CONFIG); /* enable the DMA */
 }
@@ -88,7 +88,7 @@ int audioTx_init(audioTx_t *pThis, bufferPool_t *pBuffP,
 
 
 /** start audio tx
- *   - empthy for now
+ *   - empty for now
  * Parameters:
  * @param pThis  pointer to own object
  *
