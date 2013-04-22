@@ -68,12 +68,14 @@ int uartTx_send(uartTx_t *pThis, chunk_t *pChunk)
 
 
 	/* If DMA not running ? */
-	if ((0 == pThis->running))
-	{
-		pThis->running  = 1;
+    pThis->running = 1;
+
+    if (queue_is_empty(&pThis->queue))
+    {
 		pThis->pPending = pChunk;
 
-		uartTx_dmaConfig(pThis->pPending);
+        // config DMA either with new chunk (if there was one)
+        uartTx_dmaConfig(pThis->pPending);
 	}
 	else
 	{
@@ -98,7 +100,6 @@ int uartTx_send(uartTx_t *pThis, chunk_t *pChunk)
  */
 void uartTx_dmaConfig(chunk_t *pChunk)
 {
-	
     DISABLE_DMA(*pDMA11_CONFIG);
     *pDMA11_START_ADDR   = &pChunk->u08_buff;
     *pDMA11_X_COUNT      = pChunk->bytesUsed;  // 8 bit data so we change the stride and count
@@ -143,11 +144,11 @@ void uartTx_isr(void *pThisArg)
        /* get new chunk from queue */
         if (PASS == queue_get(&pThis->queue, (void**)&pchunk))
         {
-               /* register new chunk as pending */
-               pThis->pPending = pchunk;
+            /* register new chunk as pending */
+            pThis->pPending = pchunk;
 
-               // config DMA either with new chunk (if there was one)
-               uartTx_dmaConfig(pThis->pPending);
+            // config DMA either with new chunk (if there was one)
+            uartTx_dmaConfig(pThis->pPending);
         }
         else
         {

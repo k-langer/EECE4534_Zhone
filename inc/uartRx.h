@@ -66,6 +66,7 @@ int uartRx_init(uartRx_t *pThis, bufferPool_t *pBuffP,
  */
 int uartRx_start(uartRx_t *pThis);
 
+void uartRx_dmaConfig(char* cPtr, unsigned short len);
 void uartRx_dmaStop(void);
 
 

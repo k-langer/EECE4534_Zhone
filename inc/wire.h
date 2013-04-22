@@ -26,7 +26,7 @@ int Wire_SendMessage(wire_t *pThis, chunk_t *pChunk);
 int Wire_GetMessage(wire_t *pThis, chunk_t *pChunk);
 int Wire_GetMessageNb(wire_t *pThis, chunk_t *pChunk);
 
-int Wire_PackMessage(chunk_t *pChunk, chunk_t *new_chunk);
+int Wire_PackMessage(chunk_t *pChunk);
 int Wire_UnpackMessage(chunk_t *pChunk);
 
 #endif

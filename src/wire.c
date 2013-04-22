@@ -15,25 +15,17 @@ int Wire_Init(wire_t *pThis, uartRx_t *rx, uartTx_t *tx, bufferPool_t *bp)
 
 int Wire_SendMessage(wire_t *pThis, chunk_t *pChunk)
 {
-    chunk_t *new_chunk;
-    while (pChunk->bytesUsed > 0)
+    if (FAIL == Wire_PackMessage(pChunk))
     {
-        if (FAIL == bufferPool_acquire(pThis->bp, &new_chunk))
-        {
-            return FAIL;
-        }
-
-        if (FAIL == Wire_PackMessage(pChunk, new_chunk))
-        {
-            return FAIL;
-        }
-
-        if (FAIL == uartTx_send(pThis->tx, new_chunk))
-        {
-            return FAIL;
-        }
+        bufferPool_release(pThis->bp, pChunk);
+        return FAIL;
     }
-    bufferPool_release(pThis->bp, pChunk);
+
+    if (FAIL == uartTx_send(pThis->tx, pChunk))
+    {
+        bufferPool_release(pThis->bp, pChunk);
+        return FAIL;
+    }
     return PASS;
 }
 
@@ -67,33 +59,24 @@ int Wire_GetMessageNb(wire_t *pThis, chunk_t *pChunk)
     return Wire_GetMessageAbs(pThis, pChunk);
 }
 
-int Wire_PackMessage(chunk_t *pChunk, chunk_t *new_chunk)
+int Wire_PackMessage(chunk_t *pChunk)
 {
-    int packet_length = (pChunk->bytesUsed <= 100) ? pChunk->bytesUsed : 100;
+    int packet_length = pChunk->bytesUsed;
     int packed_length;
     unsigned char payload_crc = 0;
 
-    new_chunk->u08_buff[0] = 0x7e;
-    new_chunk->u08_buff[1] = (packet_length >> 8) & 0xff;
-    new_chunk->u08_buff[2] = packet_length & 0xff;
-
-    for (packed_length = 0; packed_length < packet_length; packed_length++)
+    for (packed_length = packet_length - 1; packed_length >= 0; packed_length--)
     {
-        new_chunk->u08_buff[packed_length + 3] = pChunk->u08_buff[packed_length];
-        payload_crc += new_chunk->u08_buff[packed_length + 3];
+        pChunk->u08_buff[packed_length + 3] = pChunk->u08_buff[packed_length];
+        payload_crc += pChunk->u08_buff[packed_length + 3];
     }
 
-    if (pChunk->bytesUsed > 100)
-    {
-        for (packed_length = 0; packed_length < pChunk->bytesUsed - 100; packed_length++)
-        {
-            pChunk->u08_buff[packed_length] = pChunk->u08_buff[packed_length + 100];
-        }
-        pChunk->bytesUsed = pChunk->bytesUsed - 100;
-    }
+    pChunk->u08_buff[0] = 0x7e;
+    pChunk->u08_buff[1] = (packet_length >> 8) & 0xff;
+    pChunk->u08_buff[2] = packet_length & 0xff;
 
-    new_chunk->u08_buff[packet_length + 3] = 0xff - payload_crc;
-	new_chunk->bytesUsed = packet_length + 4;
+    pChunk->u08_buff[packet_length + 3] = 0xff - payload_crc;
+	pChunk->bytesUsed = packet_length + 4;
 
     return PASS;
 }

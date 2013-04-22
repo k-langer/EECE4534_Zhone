@@ -41,6 +41,7 @@ typedef struct {
     uartTx_t tx;
     isrDisp_t *pIsr;
     bufferPool_t *pBufPool;
+    bufferPool_t *pMiniPool;
 #if WIRE
     wire_t wire;
 #else
