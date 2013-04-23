@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include "ssm2602.h"
 #include <tll_config.h>
 #include <sys/exception.h>
 #include <bf52x_uart.h>
@@ -8,25 +7,9 @@
 #include "fpga_gpio_uart.bin.h"
 #include "startup.h"
 #include "tll_sport.h"
-#include "audioTx.h"
-#include "audioRx.h"
-#include "bufferPool.h"
-#include "isrDisp.h"
-#include "chunk.h"
-#include "encoder.h"
-#include "decoder.h"
-#include "wc.h"
+#include "zhone.h"
 
-bufferPool_t bufferPool;
-isrDisp_t isrDisp;
-chunk_t* testChunk;
-chunk_t* dataChunk;
-chunk_t* readyChunk;
-audioRx_t testInput;
-audioTx_t testOutput;
-encoder_t encoder;
-decoder_t decoder;
-wc_t wc;
+zhone_t zhone;
 
 
 #define I2C_CLOCK   (400*_1KHZ)
@@ -52,54 +35,15 @@ int main(void)
         return -1;
     }
 
-    printf("hello world\n");
-
-    bufferPool_init( &bufferPool );
-    isrDisp_init( &isrDisp );
-
     bf52xI2cMaster_init(0, I2C_CLOCK);
-    status = ssm2602_init( &isrDisp, 0x2F, SSM2602_SR_8000/2, SSM2602_TX );
     coreTimer_init();
 	if (PASS != status) {
 		printf("SSM2602 init failed\r\n");
 		return status;
 	}
 
-    audioTx_init( &testOutput, &bufferPool, &isrDisp );
-    audioRx_init( &testInput, &bufferPool, &isrDisp );
-    encoder_init( &encoder );
-    decoder_init( &decoder, 0 );
-    Wc_Init( &wc, &bufferPool, &isrDisp );
-
-    audioRx_start( &testInput );
-    audioTx_start( &testOutput );
-
-    while ( 1 )
-    {
-    	if ( audioRx_getNbNc( &testInput, &testChunk) == PASS )
-        {
-
-            bufferPool_acquire( &bufferPool, &dataChunk );
-    		encoder_encode( &encoder, testChunk, dataChunk );
-            bufferPool_release( &bufferPool, testChunk );
-
-            printf("Gonna send\n"); 
-            Wc_Start( &wc );
-            Wc_Send( &wc, dataChunk );
-
-            bufferPool_acquire( &bufferPool, &readyChunk );
-            while (FAIL == Wc_Receive( &wc, readyChunk ));
-            Wc_Stop( &wc );
-            printf("Received\n");
-
-            bufferPool_acquire( &bufferPool, &dataChunk );
-    		decoder_decode( &decoder, readyChunk, dataChunk );
-
-            audioTx_put( &testOutput, dataChunk );
-            bufferPool_release( &bufferPool, readyChunk );
-            bufferPool_release( &bufferPool, dataChunk );
-		}
-    }
+    zhone_init( &zhone );
+    zhone_run( &zhone );
 
     return 0;
 }

@@ -1,7 +1,5 @@
 #include "zhone.h"
 
-#include <stdio.h>
-
 return_value_t zhone_init( zhone_t* pThis) {
 
 	zhone_t zhone = *pThis;
@@ -11,6 +9,7 @@ return_value_t zhone_init( zhone_t* pThis) {
 	
     isrDisp_init( &zhone.isr_disp );
 	bufferPool_init( &zhone.buffer_pool );
+    ssm2602_init( &isrDisp, 0x2F, SSM2602_SR_8000/2, SSM2602_TX );
 	phonebook_init( &zhone.phonebook, a1, a2 );
 	ui_init ( &zhone.ui, &zhone.isr_disp );
 	Wc_Init( &zhone.communicator, &zhone.buffer_pool, &zhone.isr_disp );
