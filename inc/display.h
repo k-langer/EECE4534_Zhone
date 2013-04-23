@@ -63,13 +63,5 @@ void display_makingCallMenu();
 void display_inCallMenu(); 
 
 
-/***
-	busy_wait
-
-	Function taken directly from Lab1 to add a small delay to the LEDs 
-***/
-void busy_wait(unsigned int); 
-
-
 
 #endif 

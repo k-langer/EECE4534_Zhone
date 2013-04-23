@@ -19,21 +19,21 @@
 void ui_init( ui_t *pThis, isrDisp_t *isrDisp ) {
 
 
-	int status = 0;
+	int status = IDLE;
 
 	status = isrDisp_init(isrDisp); //Initialize ISR
 	if (1 != status) {
 		printf("FAIL");
-}
+	}
 
 
 	status =extio_init(isrDisp); //Initialize extio module
 	if (1 != status) {
-	printf("FAIL");
+		printf("FAIL");
 	}
 
 	extio_callbackRegister(EXTIO_PB0_HIGH, ui_button1_ISR, (void *) pThis);
-	extio_callbackRegister(EXTIO_SW2_HIGH, ui_button2_ISR, (void *) pThis);
+	extio_callbackRegister(EXTIO_PB1_HIGH, ui_button2_ISR, (void *) pThis);
 
 
 	display_init();
@@ -139,15 +139,10 @@ void ui_button1_ISR ( void* pThis ) {
 	} else if ( currentStatus == RECEIVING ) {
 
 		ui_set_status( ui,IN_CALL );    //accept a call from user1 -> go to IN_CALL
-		display_inCallMenu();              //get rid of this, have LED update in set status
-
-	} else if ( currentStatus == RECEIVING ) {
-
-		ui_set_status( ui,IN_CALL );    //accept a call from user2 -> go to IN_CALL
 
 	} else if ( currentStatus == IN_CALL ) {
 
-		ui_set_status( ui,END_CALL );        //hang up and change status to END_CALL. Zhone will change status to idle
+		ui_set_status( ui, END_CALL );        //hang up and change status to END_CALL. Zhone will change status to idle
 
 	}
 }
@@ -175,13 +170,9 @@ void ui_button2_ISR( void* pThis ) {
 
 		ui_set_status( ui,IDLE );        //decline a call from user1 -> go to idle
 
-	} else if ( currentStatus == RECEIVING ) {
-
-		ui_set_status( ui,IDLE );        //decline a call from user2 -> go to idle
-
 	} else if ( currentStatus == IN_CALL ) {
 
-		ui_set_status( ui,END_CALL );        //Hang up -> go to END_CALL to send the last packet. Zhone will then change state to idle
+		ui_set_status( ui, END_CALL );        //Hang up -> go to END_CALL to send the last packet. Zhone will then change state to idle
 
 	}
 }
