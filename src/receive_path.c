@@ -43,7 +43,8 @@ return_value_t receive_path_process_chunk( receive_path_t* pThis ) {
 		bufferPool_acquire( receive_path.pBufferPool, &pAudioChunk );
 		decoder_decode( &receive_path.decoder, pDataChunk, pAudioChunk );
 		bufferPool_release( receive_path.pBufferPool, pDataChunk );
-		audioTx_put( &receive_path.audio_tx, pAudioChunk);
+		audioTx_put( &receive_path.audio_tx, pAudioChunk );
+		bufferPool_release( pAudioChunk );
 	}
 
 	return PASS;

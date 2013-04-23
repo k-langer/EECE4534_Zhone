@@ -35,12 +35,11 @@ return_value_t transfer_path_process_chunk( transfer_path_t* pThis ) {
 	transfer_path_t transfer_path = *pThis;
 
 	chunk_t* pAudioChunk;
-	bufferPool_acquire( transfer_path.pBufferPool, &pAudioChunk );
+	chunk_t* pDataChunk;
 
 	if ( audioRx_getNbNc( &transfer_path.audio_rx, &pAudioChunk ) == FAIL ) {
 		return PASS;
 	} else {
-		chunk_t* pDataChunk;
 		bufferPool_acquire( transfer_path.pBufferPool, &pDataChunk );
 		encoder_encode( &transfer_path.encoder, pAudioChunk, pDataChunk );
 		bufferPool_release( transfer_path.pBufferPool, pAudioChunk );
