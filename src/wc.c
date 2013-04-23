@@ -48,8 +48,8 @@ int Wc_Init( wc_t *pThis, bufferPool_t *pBufPool, isrDisp_t *pIsrDisp )
         .rxtx_baud = BF52X_BAUD_RATE_9600
     };
 
-    bf52x_uart_deinit();
-    bf52x_uart_init(&settings); 
+    //bf52x_uart_deinit();
+    //bf52x_uart_init(&settings);
 
     status = uartRx_init(&pThis->rx, pThis->pBufPool, pThis->pIsr);
     if ( FAIL == status )

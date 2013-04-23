@@ -16,6 +16,7 @@
 #include "encoder.h"
 #include "decoder.h"
 #include "wc.h"
+#include "extio.h"
 
 bufferPool_t bufferPool;
 isrDisp_t isrDisp;
@@ -91,19 +92,18 @@ int main(void)
         return FAIL;
     }
 
-    bufferPool_acquire( &bufferPool, &readyChunk );
     while ( 1 )
     {
-        //if ( audioRx_getNbNc( &testInput, &testChunk) == PASS )
-        //{
+        if ( audioRx_getNbNc( &testInput, &testChunk) == PASS )
+        {
 
-        //    bufferPool_acquire( &bufferPool, &dataChunk );
-        //	encoder_encode( &encoder, testChunk, dataChunk );
-        //    bufferPool_release( &bufferPool, testChunk );
+            bufferPool_acquire( &bufferPool, &dataChunk );
+    		encoder_encode( &encoder, testChunk, dataChunk );
+            bufferPool_release( &bufferPool, testChunk );
 
-        //    Wc_Send( &wc, dataChunk );
-        //}
-        Wc_Receive( &wc, readyChunk );
+            Wc_Send( &wc, dataChunk );
+        }
+        /*Wc_Receive( &wc, readyChunk );
         if (readyChunk->bytesUsed)
         {
             bufferPool_acquire( &bufferPool, &dataChunk );
@@ -114,7 +114,7 @@ int main(void)
             bufferPool_release( &bufferPool, dataChunk );
 
             bufferPool_acquire( &bufferPool, &readyChunk );
-        }
+        }*/
     }
     Wc_Stop( &wc );
 
