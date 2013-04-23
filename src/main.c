@@ -5,7 +5,7 @@
 #include <bf52x_uart.h>
 #include <bf52xI2cMaster.h>
 #include <tll6527_core_timer.h>
-#include "fpga_gpio_uart.bin.h"
+//#include "fpga_gpio_uart.bin.h"
 #include "startup.h"
 #include "tll_sport.h"
 #include "audioTx.h"
@@ -46,7 +46,8 @@ int main(void)
     /* FPGA setup function to configure FPGA, make sure the FPGA configuration
     binary data is loaded in to SDRAM at "FPGA_DATA_START_ADDR" */
     //status = fpga_setup(); //returns 0 if successful and -1 if failed
-    status = fpga_programmer((unsigned char *)fpga_gpio_uart_bin, sizeof(fpga_gpio_uart_bin));
+    status = fpga_loader(0x3e70be61); //returns 0 if successful and -1 if failed
+    //status = fpga_programmer((unsigned char *)fpga_gpio_uart_bin, sizeof(fpga_gpio_uart_bin));
     if (status) {
         printf("\r\n FPGA Setup Failed");
         return -1;
@@ -69,37 +70,53 @@ int main(void)
     audioRx_init( &testInput, &bufferPool, &isrDisp );
     encoder_init( &encoder );
     decoder_init( &decoder, 0 );
-    Wc_Init( &wc, &bufferPool, &isrDisp );
+
+    /* Initialize the extio */
+    status = extio_init(&isrDisp);
+    if ( PASS != status ) {
+        return FAIL;
+    }
+
+    status = Wc_Init( &wc, &bufferPool, &isrDisp );
+    if ( PASS != status )
+    {
+        return FAIL;
+    }
 
     audioRx_start( &testInput );
     audioTx_start( &testOutput );
+    status = Wc_Start( &wc );
+    if ( PASS != status )
+    {
+        return FAIL;
+    }
 
+    bufferPool_acquire( &bufferPool, &readyChunk );
     while ( 1 )
     {
-    	if ( audioRx_getNbNc( &testInput, &testChunk) == PASS )
+        //if ( audioRx_getNbNc( &testInput, &testChunk) == PASS )
+        //{
+
+        //    bufferPool_acquire( &bufferPool, &dataChunk );
+        //	encoder_encode( &encoder, testChunk, dataChunk );
+        //    bufferPool_release( &bufferPool, testChunk );
+
+        //    Wc_Send( &wc, dataChunk );
+        //}
+        Wc_Receive( &wc, readyChunk );
+        if (readyChunk->bytesUsed)
         {
-
             bufferPool_acquire( &bufferPool, &dataChunk );
-    		encoder_encode( &encoder, testChunk, dataChunk );
-            bufferPool_release( &bufferPool, testChunk );
-
-            printf("Gonna send\n"); 
-            Wc_Start( &wc );
-            Wc_Send( &wc, dataChunk );
-
-            bufferPool_acquire( &bufferPool, &readyChunk );
-            while (FAIL == Wc_Receive( &wc, readyChunk ));
-            Wc_Stop( &wc );
-            printf("Received\n");
-
-            bufferPool_acquire( &bufferPool, &dataChunk );
-    		decoder_decode( &decoder, readyChunk, dataChunk );
+            decoder_decode( &decoder, readyChunk, dataChunk );
 
             audioTx_put( &testOutput, dataChunk );
             bufferPool_release( &bufferPool, readyChunk );
             bufferPool_release( &bufferPool, dataChunk );
-		}
+
+            bufferPool_acquire( &bufferPool, &readyChunk );
+        }
     }
+    Wc_Stop( &wc );
 
     return 0;
 }

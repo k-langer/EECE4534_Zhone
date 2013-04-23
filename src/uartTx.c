@@ -68,10 +68,10 @@ int uartTx_send(uartTx_t *pThis, chunk_t *pChunk)
 
 
 	/* If DMA not running ? */
-    pThis->running = 1;
-
-    if (queue_is_empty(&pThis->queue))
+    if (0 == pThis->running)
     {
+        pThis->running = 1;
+
 		pThis->pPending = pChunk;
 
         // config DMA either with new chunk (if there was one)
@@ -84,7 +84,6 @@ int uartTx_send(uartTx_t *pThis, chunk_t *pChunk)
 		{
 			//printf("[TX] Send, DMA RUNNING - FAIL PLACE IN QUEUE\n");
 			// return chunk to pool if queue is full, effectivly dropping the chunk
-			bufferPool_release(pThis->pBuffP, pChunk);
 			return FAIL;
 		}
 	}

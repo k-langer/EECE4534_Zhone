@@ -36,19 +36,42 @@ bufferPool_t miniPool;
  */
 int Wc_Init( wc_t *pThis, bufferPool_t *pBufPool, isrDisp_t *pIsrDisp )
 {
+    int status = 0;
     pThis->pIsr     = pIsrDisp;
     pThis->pBufPool = pBufPool;
     pThis->pMiniPool = &miniPool;
     bufferPool_init( pThis->pMiniPool );
 
-    uartRx_init(&pThis->rx, pThis->pMiniPool, pThis->pIsr);
-    uartTx_init(&pThis->tx, pThis->pMiniPool, pThis->pIsr);
+    bf52x_uart_settings settings = {
+        .parenable = 0,
+        .parity = 0,
+        .rxtx_baud = BF52X_BAUD_RATE_9600
+    };
+
+    bf52x_uart_deinit();
+    bf52x_uart_init(&settings); 
+
+    status = uartRx_init(&pThis->rx, pThis->pBufPool, pThis->pIsr);
+    if ( FAIL == status )
+    {
+        return FAIL;
+    }
+
+    status = uartTx_init(&pThis->tx, pThis->pMiniPool, pThis->pIsr);
+    if ( FAIL == status )
+    {
+        return FAIL;
+    }
 
 #if WIRE
-    Wire_Init(&pThis->wire, &pThis->rx, &pThis->tx, pThis->pMiniPool);
+    status = Wire_Init(&pThis->wire, &pThis->rx, &pThis->tx, pThis->pMiniPool);
 #else
-    Xbee_Init(&pThis->xbee, &pThis->rx, &pThis->tx, pThis->pBufPool);
+    status = Xbee_Init(&pThis->xbee, &pThis->rx, &pThis->tx, pThis->pMiniPool);
 #endif
+    if ( FAIL == status )
+    {
+        return FAIL;
+    }
 
     return PASS;
 }
@@ -59,14 +82,8 @@ int Wc_Init( wc_t *pThis, bufferPool_t *pBufPool, isrDisp_t *pIsrDisp )
  */
 int Wc_Start( wc_t *pThis )
 {
-    bf52x_uart_settings settings = {
-        .parenable = 0,
-        .parity = 0,
-        .rxtx_baud = BF52X_BAUD_RATE_9600
-    };
 
-    bf52x_uart_deinit();
-    bf52x_uart_init(&settings); 
+    uartRx_start(&pThis->rx);
 
     *pPORTF_FER |= 0xc000;
     *pPORTF_MUX &= ~0x0400;
@@ -74,7 +91,7 @@ int Wc_Start( wc_t *pThis )
     *pPORTFIO_DIR |= 0x4000;
     *pPORTFIO_DIR &= ~(0x8000);
 
-    return uartRx_start(&pThis->rx);
+    return PASS;
 }
 
 /** Stops the wireless communicator

@@ -26,7 +26,7 @@ int main ( void )
     
     /* FPGA setup function to configure FPGA, make sure the FPGA configuration
     binary data is loaded in to SDRAM at "FPGA_DATA_START_ADDR" */
-    status = fpga_loader(0xF445850D);
+    status = fpga_loader(0x3E70BE61);
     //status = fpga_loader(0x3F6CF620); //returns 0 if successful and -1 if failed
     if (status) {
         printf("\r\n FPGA Setup Failed"); 
@@ -63,13 +63,18 @@ int main ( void )
     }
 
     chunk_t *new_chunk = NULL;
+    bufferPool_acquire(&bp, &new_chunk);
 
     while (1)
     {
-        bufferPool_acquire(&bp, &new_chunk);
         Wc_Receive(&wc, new_chunk);
-        asm("nop;");
-        bufferPool_release(&bp, new_chunk);
+        if (new_chunk->bytesUsed > 0)
+        {
+            asm("nop;");
+            bufferPool_release(&bp, new_chunk);
+            new_chunk = NULL;
+            bufferPool_acquire(&bp, &new_chunk);
+        }
     }
 
     return PASS;

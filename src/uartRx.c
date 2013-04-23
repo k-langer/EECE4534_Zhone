@@ -138,7 +138,7 @@ void uartRx_isr(void *pThisArg)
 
         if (pThis->state == UARTRX_WAITING)
         {
-            unsigned short packet_length = ((sramPending[1] << 8) | sramPending[2]) + 1;
+            unsigned short packet_length = sramPending[2] + 1;
 
             if (0x7e == sramPending[0] && 0 < packet_length)
             {

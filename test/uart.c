@@ -6,14 +6,17 @@
 #include <extio.h>
 #include <tll6527_core_timer.h>
 #include "startup.h"
+//#include "fpga_gpio_uart.bin.h"
 #include "uartRx.h"
 #include "uartTx.h"
+#include "wire.h"
 
 uartRx_t uartRx;
 uartTx_t uartTx;
 bufferPool_t bp;
 isrDisp_t isrDisp;
 chunk_t *chunk;
+wire_t wire;
 
 int main ( void )
 {
@@ -28,7 +31,8 @@ int main ( void )
     
     /* FPGA setup function to configure FPGA, make sure the FPGA configuration
     binary data is loaded in to SDRAM at "FPGA_DATA_START_ADDR" */
-    status = fpga_loader(0x3F6CF620); //returns 0 if successful and -1 if failed
+    status = fpga_loader(0x3e70be61); //returns 0 if successful and -1 if failed
+    //status = fpga_programmer((unsigned char*)fpga_gpio_uart_bin, sizeof(fpga_gpio_uart_bin));
     if (status) {
         printf("\r\n FPGA Setup Failed"); 
         return -1;
@@ -73,6 +77,11 @@ int main ( void )
         return FAIL;
     }
 
+    status = Wire_Init(&wire, &uartRx, &uartTx, &bp);
+    if ( PASS != status ) {
+        return FAIL;
+    }
+
     status = uartRx_start(&uartRx);
     if ( PASS != status ) {
         return FAIL;
@@ -82,16 +91,19 @@ int main ( void )
     *pPORTF_MUX &= ~0x0400;
     *pPORTF_MUX |= 0x0800;
     *pPORTFIO_DIR |= 0x4000;
-    *pPORTFIO_DIR &= ~(0x8000);
+    *pPORTFIO_DIR &= ~0x8000;
 
     chunk_t *new_chunk = NULL;
-
-    char data[9];
-    bufferPool_acquire(&bp, &new_chunk);
+    char data[5] = {0};
     
     while (1)
     {
-        uartRx_get(&uartRx, new_chunk);
+        //bf52x_uart_receive(data, 5);
+        //int i = 0;
+        //while (i++ < 300000);
+
+        //uartRx_get(&uartRx, new_chunk);
+        Wire_GetMessage(&wire, new_chunk);
         if (new_chunk->bytesUsed > 0)
         {
             asm("nop;");
