@@ -21,12 +21,28 @@ encodes it, and fills the location of the
 encoded chunk. Returns pass or fail.
 */
 int encoder_encode( encoder_t* pThis, chunk_t* pAudioChunk, chunk_t* pDataChunk) {
-    int i;
-    int count = 0;
-    for (i=0; i < CHUNK_SIZE; i+=SAMPLE_DIV) {
-        pDataChunk->s08_buff[count] = (signed char) (pAudioChunk->s16_buff[i] >> SHIFT);
-        count++;
+   int i;
+   int count = 0;
+   unsigned char quietSamples = 0; 
+   unsigned char smallSample; 
+   unsigned char excCh = 1<<(7); 
+   unsigned char savedSample = QUIET_FLOOR; 
+   for (i=0; i < CHUNK_SIZE; i+=SAMPLE_DIV) {
+      smallSample = (char) (pAudioChunk->s16_buff[i] >> SHIFT);   
+      if ( (smallSample != savedSample) || (quietSamples == excCh-1) ) {
+         if (quietSamples > 1 ) {
+            count-=quietSamples;
+            pDataChunk->s08_buff[count++] = quietSamples | excCh; 
+            pDataChunk->s08_buff[count++] = savedSample; 
+         }
+         quietSamples = 0;
+      }
+      if ( smallSample == savedSample ) {
+         quietSamples++;
+      }
+      savedSample = smallSample; 
+      pDataChunk->s08_buff[count++] = smallSample>>1;
     }
-    pDataChunk->bytesUsed = count;
+    pDataChunk->bytesUsed = count;  
     return PASS;
 }
