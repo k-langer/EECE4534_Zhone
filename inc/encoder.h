@@ -2,7 +2,7 @@
 #define _ENCODER_H_
 
 #include "commonTypes.h"
-
+#define QUIET_FLOOR 0
 typedef char encoder_t;
 
 /*

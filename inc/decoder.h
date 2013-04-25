@@ -3,6 +3,7 @@
 
 #include "commonTypes.h"
 
+#define QUIET_FLOOR 0
 typedef char decoder_t;
 
 /*
