@@ -22,8 +22,11 @@ int decoder_decode(decoder_t* pThis, chunk_t* pDataChunk, chunk_t* pAudioChunk) 
     int offset = 0;
     unsigned char excCh = 1<<(8*sizeof(char)-1); 
     unsigned char smpl;
+    /* To decode the data needs to shifted by a shift value and then repeat
+       samples must be added for samples that were truncated. */
     for (i = 0; i < pDataChunk->bytesUsed; i++) { 
       smpl = pDataChunk->s08_buff[i]; 
+      //If a byte has an MSB of 1, it is an encoded string of silence
       if ( smpl & excCh ) {
          for (j = 0; j < SAMPLE_DIV*(smpl&(~(excCh))); j++) {
             pAudioChunk->s16_buff[offset++] = QUIET_FLOOR; 
