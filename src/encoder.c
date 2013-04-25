@@ -23,10 +23,23 @@ encoded chunk. Returns pass or fail.
 int encoder_encode( encoder_t* pThis, chunk_t* pAudioChunk, chunk_t* pDataChunk) {
     int i;
     int count = 0;
+    unsigned char quietSamples = 0; 
+    unsigned char smallSample; 
+    unsigned char excCh = 1<<(8*sizeof(char)-1); 
     for (i=0; i < CHUNK_SIZE; i+=SAMPLE_DIV) {
-        pDataChunk->s08_buff[count] = (signed char) (pAudioChunk->s16_buff[i] >> SHIFT);
-        count++;
+      smallSample = (char) (pAudioChunk->s16_buff[i] >> SHIFT);   
+      if ( (quietSamples!=0 && smallSample != QUIET_FLOOR) || quietSamples == excCh-1 ) {
+         pDataChunk->s08_buff[count] = quietSamples | excCh; 
+         quietSamples = 0;  
+         count++; 
+      } 
+      if ( smallSample == QUIET_FLOOR ) {
+         quietSamples++; 
+      } else {
+         pDataChunk->s08_buff[count] = smallSample>>1; 
+         count++;
+      } 
     }
-    pDataChunk->bytesUsed = count;
+    pDataChunk->bytesUsed = count;  
     return PASS;
 }

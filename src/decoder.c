@@ -18,13 +18,22 @@ int decoder_init(decoder_t* state, int nbBytes)
 
 int decoder_decode(decoder_t* pThis, chunk_t* pDataChunk, chunk_t* pAudioChunk) {
     int i;
-    int place = 0;
+    int j; 
     int offset = 0;
-    for (i=0; i < pDataChunk->bytesUsed; i++) {
-        for ( place = 0; place < SAMPLE_DIV; place++) {
-            pAudioChunk->s16_buff[place+offset] = ((signed short) pDataChunk->s08_buff[i]) << SHIFT;
-        }
-        offset+=SAMPLE_DIV;
+    unsigned char excCh = 1<<(8*sizeof(char)-1); 
+    unsigned char smpl;
+    for (i = 0; i < pDataChunk->bytesUsed; i++) { 
+      smpl = pDataChunk->s08_buff[i]; 
+      if ( smpl & excCh ) {
+         for (j = 0; j < SAMPLE_DIV*(smpl&(~(excCh))); j++) {
+            pAudioChunk->s16_buff[offset++] = QUIET_FLOOR; 
+         }
+      } else {
+         for ( j = 0; j < SAMPLE_DIV; j++ ) {
+            pAudioChunk->s16_buff[offset++] = ((short) smpl) << (SHIFT+1);
+         } 
+      }
     }
+    pAudioChunk->bytesUsed = offset*sizeof(short); 
     return PASS;
 }
