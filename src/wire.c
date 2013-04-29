@@ -21,11 +21,11 @@ int Wire_SendMessage(wire_t *pThis, chunk_t *pChunk)
         return FAIL;
     }
 
-    if (FAIL == uartTx_send(pThis->tx, pChunk))
-    {
+    while (FAIL == uartTx_send(pThis->tx, pChunk));
+    /*{
         bufferPool_release(pThis->bp, pChunk);
         return FAIL;
-    }
+    }*/
     return PASS;
 }
 
@@ -72,7 +72,7 @@ int Wire_PackMessage(chunk_t *pChunk)
     }
 
     pChunk->u08_buff[0] = 0x7e;
-    pChunk->u08_buff[1] = (packet_length >> 8) & 0xff;
+    pChunk->u08_buff[1] = 0;
     pChunk->u08_buff[2] = packet_length & 0xff;
 
     pChunk->u08_buff[packet_length + 3] = 0xff - payload_crc;

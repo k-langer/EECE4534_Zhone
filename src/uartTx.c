@@ -40,7 +40,7 @@ int uartTx_init(uartTx_t *pThis, bufferPool_t *pBuffP, isrDisp_t *pIsrDisp)
     queue_init(&pThis->queue, UARTTX_QUEUE_DEPTH);   
 
 //    *pDMA11_CONFIG |= (0x0001 << 7);  //Enable the DMA interrupt
-    *pDMA11_CONFIG = 0x10A0;  //Enable the DMA interrupt
+    *pDMA11_CONFIG = (DI_EN | SYNC);  //Enable the DMA interrupt
     
     //Register the interrupt handler
     isrDisp_registerCallback(pIsrDisp, ISR_DMA11_UART1_TX, uartTx_isr, pThis);

@@ -48,8 +48,8 @@ int Wc_Init( wc_t *pThis, bufferPool_t *pBufPool, isrDisp_t *pIsrDisp )
         .rxtx_baud = BF52X_BAUD_RATE_9600
     };
 
-    bf52x_uart_deinit();
-    bf52x_uart_init(&settings); 
+    //bf52x_uart_deinit();
+    //bf52x_uart_init(&settings); 
 
     status = uartRx_init(&pThis->rx, pThis->pBufPool, pThis->pIsr);
     if ( FAIL == status )
@@ -108,8 +108,8 @@ int Wc_Stop( wc_t *pThis )
         .rxtx_baud = BF52X_BAUD_RATE_115200
     };
 
-    bf52x_uart_deinit();
-    bf52x_uart_init(&settings); 
+    //bf52x_uart_deinit();
+    //bf52x_uart_init(&settings); 
 
     *pPORTF_FER &= ~0xc000;
 
@@ -186,7 +186,7 @@ int Wc_Send( wc_t *pThis, chunk_t *pChunk )
 
     while (pChunk->bytesUsed)
     {
-        len = (pChunk->bytesUsed <= 100) ? pChunk->bytesUsed : 100;
+        len = (pChunk->bytesUsed <= 99) ? pChunk->bytesUsed : 99;
 
         status = bufferPool_acquire(pThis->pMiniPool, &new_chunk);
         if (FAIL == status)
